@@ -1,0 +1,5 @@
+Template_Form           RCDATA          "Template\\UTemplateForm.pas"
+Form                    ICON            "Icon\Form.ico"
+
+Template_Frame          RCDATA          "Template\\UTemplateFrame.pas"
+Frame                   ICON            "Icon\Frame.ico"

@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="BRCC32" AssemblyFile="$(BDS)\bin\Borland.Build.Tasks.Shared.dll" />
+  <PropertyGroup Condition="'$(BuildRelation)'=='YES' And '$(ETS_RelationProject)'!=''">
+    <CoreBuildDependsOn>
+      $(CoreBuildDependsOn);
+      CoreBuildRelation;
+    </CoreBuildDependsOn>
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      CleanRelation;
+    </CleanDependsOn>
+  </PropertyGroup>
+  <ItemGroup>
+    <_ETS_RelationProject Include="$(ETS_RelationProject)" />
+  </ItemGroup>
+  <Target Name="CoreBuildRelation">
+    <CreateItem Include="@(_ETS_RelationProject->'$(MSBuildProjectDirectory)\%(Identity)')">
+      <Output TaskParameter="Include" ItemName="__ETS_RelationProject" />
+    </CreateItem>
+    <MSBuild Projects="@(__ETS_RelationProject)" Targets="Build" />
+  </Target>
+  <Target Name="CleanRelation">
+    <CreateItem Include="@(_ETS_RelationProject->'$(MSBuildProjectDirectory)\%(Identity)')">
+      <Output TaskParameter="Include" ItemName="__ETS_RelationProject" />
+    </CreateItem>
+    <MSBuild Projects="@(__ETS_RelationProject)" Targets="Clean" />
+  </Target>
+  <Target Name="ResolveResources">
+    <CreateItem Include="@(EmbeddedResource)" Condition="('%(EXTENSION)'=='.rc')">
+      <Output TaskParameter="Include" ItemName="_RCFiles" />
+    </CreateItem>
+    <CreateItem Include="@(EmbeddedResource->'$(DCC_DcuOutput)\%(Filename).res')"
+          Condition="('%(EXTENSION)'=='.rc')">
+      <Output TaskParameter="Include" ItemName="_ResourceFiles" />
+    </CreateItem>
+    <CreateItem Include="@(EmbeddedResource)" Condition="('%(EXTENSION)'=='.res')">
+      <Output TaskParameter="Include" ItemName="_ResourceFiles" />
+    </CreateItem>
+  </Target>
+  <Target Name="Win32ResourceDependencies" />
+  <Target Name="BuildWin32Resources" Condition="'@(_RCFiles)'!=''"
+    Inputs="@(_RCFiles);%(_RCDependencies.Dependencies)" Outputs="@(_ResourceFiles)">
+    <BRCC32
+      Compile="%(_RCFiles.Identity)"
+      ForceExecute="true"
+      ProjectFileName="$(MSBuildProjectFullPath)"
+      InternalDependencyCheck="false"
+      ResFiles="$(DCC_DcuOutput)\%(_RCFiles.Filename).res"
+      OutputDir="$(DCC_DcuOutput)" />
+    <Copy
+      SourceFiles="$(DCC_DcuOutput)\%(_RCFiles.Filename).res"
+      DestinationFolder="%(_RCFiles.RootDir)%(_RCFiles.Directory)" />
+  </Target>
+  <Target Name="ResolveOutputs">
+    <CreateItem Include="@(DCCReference->'$(DCC_DcuOutput)\%(filename)$(DCCPasFileOutputExt)')"
+      Condition="('%(EXTENSION)'=='.pas' And '$(DCC_DcuOutput)'!='')">
+      <Output TaskParameter="Include" ItemName="__OutputFiles" />
+    </CreateItem>
+    <CreateItem Include="@(_ProjectFiles->'$(DCC_BplOutput)\%(Filename)$(DCC_LibSuffix).bpl')"
+      Condition="('%(EXTENSION)'=='.dpk' Or '%(EXTENSION)'=='.dpkw')">
+      <Output TaskParameter="Include" ItemName="__OutputFiles" />
+    </CreateItem>
+    <CreateItem Include="@(_ProjectFiles->'$(DCC_BplOutput)\%(Filename)$(DCC_LibSuffix).dcp')"
+      Condition="('%(EXTENSION)'=='.dpk' Or '%(EXTENSION)'=='.dpkw')">
+      <Output TaskParameter="Include" ItemName="__OutputFiles" />
+    </CreateItem>
+    <CreateItem Include="@(_ProjectFiles->'$(DCC_ExeOutput)\%(Filename)$(ProjectOutputExtension)')"
+      Condition="('%(EXTENSION)'=='.dpr')">
+      <Output TaskParameter="Include" ItemName="__OutputFiles" />
+    </CreateItem>
+    <CreateItem Include="@(_ResourceFiles)" Condition="'$(DependencyCheckUnits)'==''">
+      <Output TaskParameter="Include" ItemName="__OutputFiles"/>
+    </CreateItem>
+    <CreateItem Include="@(_ProjectFiles->'$(DCC_DcuOutput)\%(Filename).dcu')"
+      Condition="(('%(EXTENSION)'=='.dpk' Or '%(EXTENSION)'=='.dpkw') And '$(DCC_DcuOutput)'!='')">
+      <Output TaskParameter="Include" ItemName="__OutputFiles" />
+    </CreateItem>
+    <CreateItem Include="@(_ETS_SearchPath->'$(SrcDir)%(Identity)')"
+      Condition="'$(ETS_SearchPath)'!=''">
+      <Output TaskParameter="Include" ItemName="__ETS_SearchPath" />
+    </CreateItem>
+  </Target>
+</Project>

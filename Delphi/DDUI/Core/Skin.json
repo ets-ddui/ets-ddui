@@ -1,0 +1,536 @@
+{
+    "TEXT": {
+        "__brush__": {
+            "__class__": "TSolidBrushHelper",
+            "__property__": {
+                "Color": "aclGold"
+            }
+        },
+        "__font__": {
+            "__class__": "TFontHelper",
+            "__property__": {
+                "Family": "Arial",
+                "Size": 11,
+                "FontUnit": "UnitPixel"
+            }
+        },
+        "__color__": {
+            "__class__": "TColorHelper",
+            "__property__": {
+                "Color": "aclRed"
+            }
+        },
+        "H1": {
+            "__brush__": {
+                "__reference__": "EDIT.TEXT"
+            },
+            "__font__": {
+                "__reference__": "TEXT",
+                "__property__": {
+                    "Size": 28
+                }
+            }
+        },
+        "H2": {
+            "__brush__": {
+                "__reference__": "TEXT",
+                "__property__": {
+                    "Color": "$BBE0E0E0"
+                }
+            },
+            "__font__": {
+                "__reference__": "TEXT",
+                "__property__": {
+                }
+            }
+        }
+    },
+    "BUTTON": {
+        "HOVER": {
+            "__brush__": {
+                "__class__": "TLinearGradientBrushHelper",
+                "__property__": {
+                    "Width": 1,
+                    "Height": 30,
+                    "Color1": "$FF505050",
+                    "Color2": "$80505050",
+                    "Mode": "LinearGradientModeVertical"
+                }
+            }
+        },
+        "PRESS": {
+            "__brush__": {
+                "__reference__": "BUTTON.HOVER",
+                "__property__": {
+                    "Color1": "$FF606060",
+                    "Color2": "$80606060"
+                }
+            }
+        }
+    },
+    "EDIT": {
+        "HINT": {
+            "__brush__": {
+                "__class__": "TSolidBrushHelper",
+                "__property__": {
+                    "Color": "$80808080"
+                }
+            }
+        },
+        "LINE": {
+            "__pen__": {
+                "__class__": "TPenHelper",
+                "__property__": {
+                    "Color": "$FF434346",
+                    "Width": 1
+                }
+            }
+        },
+        "TEXT": {
+            "__brush__": {
+                "__class__": "TSolidBrushHelper",
+                "__property__": {
+                    "Color": "$FFE0E0E0"
+                }
+            },
+            "__font__": {
+                "__reference__": "TEXT"
+            }
+        }
+    },
+    "GRID": {
+        "BACKGROUND": {
+            "__brush__": {
+                "__class__": "TSolidBrushHelper",
+                "__property__": {
+                    "Color": "$80505050"
+                }
+            },
+            "FOCUS": {
+                "__brush__": {
+                    "__class__": "TSolidBrushHelper",
+                    "__property__": {
+                        "Color": "$FF505050"
+                    }
+                }
+            },
+            "TITLE": {
+                "__brush__": {
+                    "__class__": "TSolidBrushHelper",
+                    "__property__": {
+                        "Color": "$BB808080"
+                    }
+                }
+            }
+        },
+        "LINE": {
+            "__pen__": {
+                "__reference__": "EDIT.LINE"
+            },
+            "TITLE": {
+                "__pen__": {
+                    "__reference__": "GRID.LINE"
+                }
+            }
+        },
+        "TEXT": {
+            "__brush__": {
+                "__reference__": "EDIT.TEXT"
+            },
+            "__font__": {
+                "__reference__": "EDIT.TEXT"
+            }
+        }
+    },
+    "SCROLL": {
+        "ANGLE": {
+            "__brush__": {
+                "__class__": "TSolidBrushHelper",
+                "__property__": {
+                    "Color": "$80CEDDEB"
+                }
+            }
+        },
+        "TRACING": {
+            "__brush__": {
+                "__reference__": "SCROLL.ANGLE"
+            }
+        }
+    },
+    "SHAPE": {
+        "__brush__": {
+            "__class__": "TSolidBrushHelper",
+            "__property__": {
+                "Color": "$88888888"
+            }
+        },
+        "__pen__": {
+            "__class__": "TPenHelper",
+            "__property__": {
+                "Color": "$FF888888",
+                "Width": 1
+            }
+        }
+    },
+    "SYSTEM": {
+        "HOVER": {
+            "__brush__": {
+                "__class__": "TLinearGradientBrushHelper",
+                "__property__": {
+                    "Width": 1,
+                    "Height": 19,
+                    "Color1": "$FF505050",
+                    "Color2": "$0",
+                    "Mode": "LinearGradientModeVertical"
+                }
+            },
+            "CLOSE": {
+                "__brush__": {
+                    "__reference__": "SYSTEM.HOVER",
+                    "__property__": {
+                        "Color1": "$FFD61424"
+                    }
+                }
+            }
+        },
+        "PRESS": {
+            "__brush__": {
+                "__reference__": "SYSTEM.HOVER",
+                "__property__": {
+                    "Color1": "$FF606060"
+                }
+            },
+            "CLOSE": {
+                "__brush__": {
+                    "__reference__": "SYSTEM.HOVER",
+                    "__property__": {
+                        "Color1": "$FFFF0000"
+                    }
+                }
+            }
+        },
+        "BACKGROUND": {
+            "__brush__": {
+                "__class__": "TSolidBrushHelper",
+                "__property__": {
+                    "Color": "$CCFFFFFF"
+                }
+            }
+        },
+        "__image__": {
+            "__class__": "TImageHelper",
+            "__property__": {
+                "Picture": {
+                    "__class__": "TDUIPicture",
+                    "__property__": {
+                        "Childs": [
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "保存1",
+                                    "Left": 0,
+                                    "Top": 0,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "保存2",
+                                    "Left": 16,
+                                    "Top": 0,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "禁止1",
+                                    "Left": 0,
+                                    "Top": 16,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "禁止2",
+                                    "Left": 16,
+                                    "Top": 16,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "开启1",
+                                    "Left": 0,
+                                    "Top": 32,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "开启2",
+                                    "Left": 16,
+                                    "Top": 32,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "配置1",
+                                    "Left": 0,
+                                    "Top": 48,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "配置2",
+                                    "Left": 16,
+                                    "Top": 48,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "清除1",
+                                    "Left": 0,
+                                    "Top": 64,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "清除2",
+                                    "Left": 16,
+                                    "Top": 64,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "取消1",
+                                    "Left": 0,
+                                    "Top": 80,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "取消2",
+                                    "Left": 16,
+                                    "Top": 80,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "确定1",
+                                    "Left": 0,
+                                    "Top": 96,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "确定2",
+                                    "Left": 16,
+                                    "Top": 96,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "删除1",
+                                    "Left": 0,
+                                    "Top": 112,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "删除2",
+                                    "Left": 16,
+                                    "Top": 112,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "设置1",
+                                    "Left": 0,
+                                    "Top": 128,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "设置2",
+                                    "Left": 16,
+                                    "Top": 128,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "收藏1",
+                                    "Left": 0,
+                                    "Top": 144,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "收藏2",
+                                    "Left": 16,
+                                    "Top": 144,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "刷新1",
+                                    "Left": 0,
+                                    "Top": 160,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "刷新2",
+                                    "Left": 16,
+                                    "Top": 160,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "提醒1",
+                                    "Left": 0,
+                                    "Top": 176,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "提醒2",
+                                    "Left": 16,
+                                    "Top": 176,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "添加1",
+                                    "Left": 0,
+                                    "Top": 192,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "添加2",
+                                    "Left": 16,
+                                    "Top": 192,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "退出1",
+                                    "Left": 0,
+                                    "Top": 208,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            },
+                            {
+                                "__class__": "TDUIPictureChild",
+                                "__property__": {
+                                    "Name": "退出2",
+                                    "Left": 16,
+                                    "Top": 208,
+                                    "Width": 16,
+                                    "Height": 16
+                                }
+                            }
+                        ]
+                    },
+                    "__custom_property__": "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"
+                }
+            }
+        }
+    },
+    "FUNCTION": {
+        "CRYPT": {
+            "EQUAL": [
+                {
+                    "__brush__": {
+                        "__class__": "TSolidBrushHelper",
+                        "__property__": {
+                            "Color": "aclGreen"
+                        }
+                    }
+                },
+                {
+                    "__brush__": {
+                        "__class__": "TSolidBrushHelper",
+                        "__property__": {
+                            "Color": "aclRed"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,64 @@
+object DUIStringEditorDlg: TDUIStringEditorDlg
+  Left = 0
+  Top = 0
+  ClientHeight = 336
+  ClientWidth = 447
+  Color = clBackground
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object MmValue: TMemo
+    Left = 0
+    Top = 0
+    Width = 447
+    Height = 291
+    Align = alClient
+    TabOrder = 0
+  end
+  object PnlControl: TDUIPanel
+    Left = 0
+    Top = 291
+    Width = 447
+    Height = 45
+    Align = alBottom
+    object BtnSave: TDUIButton
+      AlignWithMargins = True
+      Left = 307
+      Top = 5
+      Width = 60
+      Height = 35
+      Margins.Left = 0
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alRight
+      Shape.Width = 51
+      Shape.Height = 51
+      TextAlign = alClient
+      Caption = #20445#23384
+      OnClick = BtnSaveClick
+    end
+    object BtnCancel: TDUIButton
+      AlignWithMargins = True
+      Left = 377
+      Top = 5
+      Width = 60
+      Height = 35
+      Margins.Left = 0
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alRight
+      Shape.Width = 51
+      Shape.Height = 51
+      TextAlign = alClient
+      Caption = #21462#28040
+      OnClick = BtnCancelClick
+    end
+  end
+end

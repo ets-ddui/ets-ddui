@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{884a9fb1-a585-4b62-8f3c-504533ea7169}</ProjectGuid>
+    <MainSource>DDUI.dpk</MainSource>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+    <ETS_SearchPath>Comm;ThirdParty\DGL</ETS_SearchPath>
+    <ETS_SubDir>ETS\Dll\Common</ETS_SubDir>
+  </PropertyGroup>
+  <Import Project="..\ETS.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Delphi.Personality</Borland.Personality>
+    <Borland.ProjectType>Package</Borland.ProjectType>
+    <BorlandProject>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">True</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2052</VersionInfo><VersionInfo Name="CodePage">936</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">DDUI.dpk</Source></Source></Delphi.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <Import Project="$(SrcDir)\ETS.End.props" />
+  <ItemGroup>
+    <DelphiCompile Include="DDUI.dpk">
+      <MainSource>MainSource</MainSource>
+    </DelphiCompile>
+    <DCCReference Include="..\Comm\UTool.pas" />
+    <DCCReference Include="..\ThirdParty\Borland\UEncdDecd.pas" />
+    <DCCReference Include="..\ThirdParty\GDIPlus\GDIHelper.pas" />
+    <DCCReference Include="..\ThirdParty\GDIPlus\IGDIPlus.pas" />
+    <DCCReference Include="..\ThirdParty\QDAC3\pcre.pas" />
+    <DCCReference Include="..\ThirdParty\QDAC3\PerlRegEx.pas" />
+    <DCCReference Include="..\ThirdParty\QDAC3\qjson.pas" />
+    <DCCReference Include="..\ThirdParty\QDAC3\qrbtree.pas" />
+    <DCCReference Include="..\ThirdParty\QDAC3\QSimplePool.pas" />
+    <DCCReference Include="..\ThirdParty\QDAC3\qstring.pas" />
+    <DCCReference Include="..\ThirdParty\Scintilla\Scintilla.pas" />
+    <DCCReference Include="..\ThirdParty\Scintilla\ScintillaConst.pas" />
+    <DCCReference Include="..\ThirdParty\Scintilla\ScintillaLexerConst.pas" />
+    <DCCReference Include="Control\Grid\UDUIGrid.pas" />
+    <DCCReference Include="Control\Grid\UDUIGridData.pas" />
+    <DCCReference Include="Control\Grid\UDUIGridEx.pas" />
+    <DCCReference Include="Control\Grid\UDUIGridHashMap.pas" />
+    <DCCReference Include="Control\Grid\UDUITreeGrid.pas" />
+    <DCCReference Include="Control\UDUIButton.pas" />
+    <DCCReference Include="Control\UDUIEdit.pas" />
+    <DCCReference Include="Control\UDUIImage.pas" />
+    <DCCReference Include="Control\UDUILabel.pas" />
+    <DCCReference Include="Control\UDUIPanel.pas" />
+    <DCCReference Include="Control\UDUIScrollBar.pas" />
+    <DCCReference Include="Control\UDUIShape.pas" />
+    <DCCReference Include="Control\UDUIWinWrapper.pas" />
+    <DCCReference Include="Core\UDUICoordinateTransform.pas" />
+    <DCCReference Include="Core\UDUICore.pas" />
+    <DCCReference Include="Core\UDUIForm.pas" />
+    <DCCReference Include="Core\UDUIGraphics.pas" />
+    <DCCReference Include="Core\UDUIHint.pas" />
+    <DCCReference Include="Core\UDUIRcStream.pas" />
+    <DCCReference Include="Core\UDUIRegComponents.pas" />
+    <DCCReference Include="Core\UDUISkin.pas" />
+    <DCCReference Include="Core\UDUIUtils.pas" />
+    <EmbeddedResource Include="..\ThirdParty\Scintilla\Scintilla.rc" />
+    <EmbeddedResource Include="Core\Skin.rc" />
+    <EmbeddedResource Include="Wizard\Res\DUI.rc" />
+    <DCCReference Include="dbrtl.dcp" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="vcl.dcp" />
+  </ItemGroup>
+</Project>

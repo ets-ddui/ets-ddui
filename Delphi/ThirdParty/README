@@ -1,0 +1,12 @@
+# 本目录用于存放第三方库的源代码
+
+部分库并未包含完整源码，仅包含了 `ETS` 中使用到的部分，如果需要这些库的完整源码，可参考后面清单中给出的地址。
+第三方库的版权归相关库的原作者所有，与 `ETS` 项目无关。
+
+目录名|说明|来源地址
+-|-|-
+DGL|STL的Delphi移植版本|https://github.com/sisong/DGL.git
+GDIPlus|GDI+的Delphi包装|svn://svn.code.sf.net/p/igdiplus/code
+JCL|用于调试目的，获取程序的调用栈|https://github.com/project-jedi/jcl.git
+QDAC3|JSON解释器|git://www.qdac.cc/QDAC3.git
+Scintilla|本作者对Scintilla编辑器的简单二次包装|http://www.scintilla.org

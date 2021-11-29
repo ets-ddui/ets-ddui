@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DCC_DebugInformation>False</DCC_DebugInformation>
+    <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+    <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    <DCC_Define Condition="'$(DCC_Define)'==''">RELEASE</DCC_Define>
+    <DCC_AssertionsAtRuntime>False</DCC_AssertionsAtRuntime>
+  </PropertyGroup>
+  <Choose>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\Delphi')">
+      <PropertyGroup>
+        <SrcDir>$(MSBuildProjectDirectory)</SrcDir>
+      </PropertyGroup>
+    </When>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\Delphi')">
+      <PropertyGroup>
+        <SrcDir>$(MSBuildProjectDirectory)\..</SrcDir>
+      </PropertyGroup>
+    </When>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\Delphi')">
+      <PropertyGroup>
+        <SrcDir>$(MSBuildProjectDirectory)\..\..</SrcDir>
+      </PropertyGroup>
+    </When>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\..\Delphi')">
+      <PropertyGroup>
+        <SrcDir>$(MSBuildProjectDirectory)\..\..\..</SrcDir>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <PropertyGroup Condition="'$(BinDir)'==''">
+    <BinDir>$(SrcDir)\$(Configuration)</BinDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SrcDir Condition="'$(SrcDir)'!='' And !HasTrailingSlash('$(SrcDir)')">$(SrcDir)\</SrcDir>
+    <BinDir Condition="'$(BinDir)'!='' And !HasTrailingSlash('$(BinDir)')">$(BinDir)\</BinDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <_ETS_SearchPath Include="$(ETS_SearchPath)" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DCC_DcuOutput>$(BinDir)Temp\ETS\$(MSBuildProjectName)</DCC_DcuOutput>
+    <DCC_ObjOutput>$(DCC_DcuOutput)</DCC_ObjOutput>
+    <DCC_HppOutput>$(DCC_DcuOutput)</DCC_HppOutput>
+    <DCC_ExeOutput Condition="'$(ETS_SubDir)'!=''">$(BinDir)$(ETS_SubDir)</DCC_ExeOutput>
+    <DCC_ExeOutput Condition="'$(ETS_SubDir)'==''">$(BinDir)ETS</DCC_ExeOutput>
+    <DCC_BplOutput Condition="'$(ETS_SubDir)'!=''">$(BinDir)$(ETS_SubDir)</DCC_BplOutput>
+    <DCC_BplOutput Condition="'$(ETS_SubDir)'==''">$(BinDir)Component</DCC_BplOutput>
+    <DCC_DcpOutput>$(BinDir)Component</DCC_DcpOutput>
+    <DCC_UnitSearchPath>@(__ETS_SearchPath)</DCC_UnitSearchPath>
+    <DCC_ResourcePath>$(DCC_DcuOutput)</DCC_ResourcePath>
+    <DCC_ObjPath>$(DCC_UnitSearchPath)</DCC_ObjPath>
+    <DCC_IncludePath>$(DCC_UnitSearchPath)</DCC_IncludePath>
+    <DCC_MapFile>3</DCC_MapFile>
+  </PropertyGroup>
+</Project>

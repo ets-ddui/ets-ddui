@@ -1,0 +1,856 @@
+/*
+    Copyright (c) 2021-2031 Steven Shi
+
+    ETS_DDUI For Delphi，让漂亮界面做起来更简单。
+
+    本UI库是开源自由软件，您可以遵照 MIT 协议，修改和发布此程序。
+    发布此库的目的是希望其有用，但不做任何保证。
+    如果将本库用于商业项目，由于本库中的Bug，而引起的任何风险及损失，本作者不承担任何责任。
+
+    开源地址: https://github.com/ets-ddui/ets-ddui
+    开源协议: The MIT License (MIT)
+    作者邮箱: xinghun87@163.com
+    官方博客：https://blog.csdn.net/xinghun61
+*/
+{
+    /*
+        languages: 定义了实际的编程语言，其作用是将文件扩展名和语法解释器(lexer)做对应。
+            多个语言可以对应同一个lexer，例如，C++和Java。
+            关键字定义在语言级，这样，不同的语言就能拥有不同的关键字定义，例如，C++和Java的关键字就不完全相同。
+        lexers: 语法解释器，其类别在Scintilla中是硬编码编写的，必须完全一致。
+            用户可以自定义的是显示样式(style)，Scintilla针对不同的语法要素，有不同的样式定义(以序号标识，32为默认样式，其他值均在[0, 255]之间)。
+    */
+    "languages": {
+        "Assembler": {
+            "file_extension": ["asm"],
+            "lexer": "asm",
+            "keywords": {
+                "0": "aaa aad aam aas daa das ja jae jb jbe jc jcxz je jg jge jl jle jmp jna 	jnae jnb jnbe jnc jne jng jnge jnl jnle jno jnp jns jnz 	jo jp jpe jpo js jz 	jcxz jecxz jrcxz 	loop loope loopne loopz loopnz 	call ret add sub adc sbb neg cmp inc dec 	and or xor not test 	shl shr sal sar shld shrd rol ror rcl rcr 	cbw cwd cwde cdq cdqe cqo 	bsf bsr bt btc btr bts 	idiv imul div mul bswap 	nop lea 	mov movsx movsxd movzx 	xlatb bound 	xchg xadd cmpxchg cmpxchg8b cmpxchg16b push pop pushad popad pushf popf pushfd popfd pushfq popfq seta setae setb setbe setc sete setg setge setl 	setle setna setnae setnb setnbe setnc setne setng setnge 	setnl setnle setno setnp setns setnz seto setp setpe setpo 	sets setz 	salc clc cld stc std cmc lahf sahf cmovo cmovno cmovb cmovc cmovnae cmovae cmovnb 	cmovnc cmove cmovz cmovne cmovnz cmovbe cmovna cmova 	cmovnbe cmovs cmovns cmovp cmovpe cmovnp cmovpo cmovl 	cmovnge cmovge cmovnl cmovle cmovng cmovg cmovnle lock rep repe repz repne repnz cmpsb cmpsw cmpsq 	movsb movsw movsq 	scasb scasw scasd scasq 	stosb stosw stosd stosq cpuid rdtsc rdtscp rdpmc xgetbv llwpcb slwpcb lwpval lwpins crc32 popcnt lzcnt tzcnt movbe pclmulqdq rdrand andn bextr blsi blsmk blsr bzhi mulx pdep pext rorx sarx shlx shrx",
+                "2": "f2xm1 fabs fadd faddp fbld fbstp fchs fclex fcom fcomp fcompp fdecstp 	fdisi fdiv fdivp fdivr fdivrp feni ffree fiadd ficom ficomp fidiv 	fidivr fild fimul fincstp finit fist fistp fisub fisubr fld fld1 	fldcw fldenv fldenvw fldl2e fldl2t fldlg2 fldln2 fldpi fldz fmul 	fmulp fnclex fndisi fneni fninit fnop fnsave fnsavew fnstcw fnstenv 	fnstenvw fnstsw fpatan fprem fptan frndint frstor frstorw fsave 	fsavew fscale fsqrt fst fstcw fstenv fstenvw fstp fstsw fsub fsubp 	fsubr fsubrp ftst fwait fxam fxch fxtract fyl2x fyl2xp1 	fsetpm fcos fldenvd fnsaved fnstenvd fprem1 frstord fsaved fsin fsincos 	fstenvd fucom fucomp fucompp fcomi fcomip fucomi fucomip ffreep 	fcmovb fcmove fcmovbe fcmovu fcmovnb fcmovne fcmovnbe fcmovnu",
+                "3": "al ah bl bh cl ch dl dh 	ax bx cx dx si di bp 	eax ebx ecx edx esi edi ebx esp 	st0 st1 st2 st3 st4 st5 st6 st7 	mm0 mm1 mm2 mm3 mm4 mm5 mm6 mm7 	xmm0 xmm1 xmm2 xmm3 xmm4 xmm5 xmm6 xmm7 	ymm0 ymm1 ymm2 ymm3 ymm4 ymm5 ymm6 ymm7 	fs sil dil bpl 	r8b r9b r10b r11b r12b r13b r14b r15b 	r8w r9w r10w r11w r12w r13w r14w r15w 	rax rcx rdx rbx rsp rbp rsi rdi 	r8 r9 r10 r11 r12 r13 r14 r15 	xmm8 xmm9 xmm10 xmm11 xmm12 xmm13 xmm14 xmm15 	ymm8 ymm9 ymm10 ymm11 ymm12 ymm13 ymm14 ymm15 	gs",
+                "4": "db dw dd dq dt do dy 	resb resw resd resq rest reso resy incbin equ times safeseh 	__utf16__ __utf32__ %+ 	default cpu float start imagebase osabi 	..start ..imagebase ..gotpc ..gotoff ..gottpoff ..got ..plt ..sym ..tlsie 	section segment __sect__ group absolute 	.bss .comment .data .lbss .ldata .lrodata .rdata .rodata .tbss .tdata .text 	alloc bss code exec data noalloc nobits noexec nowrite progbits rdata tls write 	private public common stack overlay class 	extern global common import export 	%define %idefine %xdefine %ixdefine %assign %undef %? %?? 	%defstr %idefstr %deftok %ideftok 	%strcat %strlen %substr 	%macro %imacro %rmacro %exitmacro %endmacro %unmacro 	%if %ifn %elif %elifn %else %endif 	%ifdef %ifndef %elifdef %elifndef 	%ifmacro %ifnmacro %elifmacro %elifnmacro 	%ifctx %ifnctx %elifctx %elifnctx 	%ifidn %ifnidn %elifidn %elifnidn 	%ifidni %ifnidni %elifidni %elifnidni 	%ifid %ifnid %elifid %elifnid 	%ifnum %ifnnum %elifnum %elifnnum 	%ifstr %ifnstr %elifstr %elifnstr 	%iftoken %ifntoken %eliftoken %elifntoken 	%ifempty %elifempty %ifnempty %elifnempty 	%ifenv %ifnenv %elifenv %elifnenv 	%rep %exitrep %endrep 	%while %exitwhile %endwhile 	%include %pathsearch %depend %use 	%push %pop %repl %arg %local %stacksize flat flat64 large small 	%error %warning %fatal 	%00 .nolist %rotate %line %! %final %clear 	struc endstruc istruc at iend 	align alignb sectalign 	bits use16 use32 use64 	__nasm_major__ __nasm_minor__ __nasm_subminor__ ___nasm_patchlevel__ 	__nasm_version_id__ __nasm_ver__ 	__file__ __line__ __pass__ __bits__ __output_format__ 	__date__ __time__ __date_num__ __time_num__ __posix_time__ 	__utc_date__ __utc_time__ __utc_date_num__ __utc_time_num__ 	__float_daz__ __float_round__ __float__ 	__use_altreg__ altreg 	__use_smartalign__ smartalign __alignmode__ 	__use_fp__ __infinity__ __nan__ __qnan__ __snan__ 	__float8__ __float16__ __float32__ __float64__ __float80m__ __float80e__ __float128l__ __float128h__",
+                "5": "a16 a32 a64 o16 o32 o64 strict 	byte word dword qword tword oword yword nosplit 	%0 %1 %2 %3 %4 %5 %6 %7 %8 %9 	abs rel 	$ $$ 	seg wrt",
+                "6": "movd movq 	paddb paddw paddd paddsb paddsw paddusb paddusw 	psubb psubw psubd psubsb psubsw psubusb psubusw 	pand pandn por pxor 	pcmpeqb pcmpeqd pcmpeqw pcmpgtb pcmpgtd pcmpgtw 	pmaddwd pmulhw pmullw 	psllw pslld psllq psrlw psrld psrlq psraw psrad 	packuswb packsswb packssdw 	punpcklbw punpcklwd punpckldq punpckhbw punpckhwd punpckhdq 	emms pavgb pavgw 	pextrw pinsrw pmovmskb 	pmaxsw pmaxub pminsw pminub 	pmulhuw psadbw pshufw 	prefetchnta prefetcht0 prefetcht1 prefetcht2 	maskmovq movntq sfence paddsiw psubsiw 	pmulhrw pmachriw pmulhriw 	pmagw pdistib paveb 	pmvzb pmvnzb pmvlzb pmvgezb pfacc pfadd pfsub pfsubr pfmul 	pfcmpeq pfcmpge pfcmpgt 	pfmax pfmin 	pfrcp pfrcpit1 pfrcpit2 pfrsqit1 pfrsqrt 	pi2fd pf2id 	pavgusb pmulhrw 	femms pfnacc pfpnacc pi2fw pf2iw pswapd pfrsqrtv pfrcpv prefetch prefetchw addss addps subss subps 	mulss mulps divss divps sqrtss sqrtps 	rcpss rcpps rsqrtss rsqrtps 	maxss maxps minss minps 	cmpss comiss ucomiss cmpps 	cmpeqss cmpltss cmpless cmpunordss cmpneqss cmpnltss cmpnless cmpordss 	cmpeqps cmpltps cmpleps cmpunordps cmpneqps cmpnltps cmpnleps cmpordps 	andnps andps orps xorps 	cvtsi2ss cvtss2si cvttss2si 	cvtpi2ps cvtps2pi cvttps2pi 	movss movlps movhps movlhps movhlps movaps movups movntps movmskps 	shufps unpckhps unpcklps 	ldmxcsr stmxcsr addpd addsd subpd subsd 	mulsd mulpd divsd divpd sqrtsd sqrtpd 	maxsd maxpd minsd minpd 	cmpsd comisd ucomisd cmppd 	cmpeqsd cmpltsd cmplesd cmpunordsd cmpneqsd cmpnltsd cmpnlesd cmpordsd 	cmpeqpd cmpltpd cmplepd cmpunordpd cmpneqpd cmpnltpd cmpnlepd cmpordpd 	andnpd andpd orpd xorpd 	cvtsd2ss cvtpd2ps cvtss2sd cvtps2pd 	cvtdq2ps cvtps2dq cvttps2dq 	cvtdq2pd cvtpd2dq cvttpd2dq 	cvtsi2sd cvtsd2si cvttsd2si 	cvtpi2pd cvtpd2pi cvttpd2pi 	movsd movlpd movhpd movapd movupd movntpd movmskpd 	shufpd unpckhpd unpcklpd 	movnti movdqa movdqu movntdq maskmovdqu 	movdq2q movq2dq 	paddq psubq pmuludq 	pslldq psrldq 	punpcklqdq punpckhqdq 	pshufhw pshuflw pshufd 	lfence mfence addsubps addsubpd 	haddps haddpd hsubps hsubpd 	movsldup movshdup movddup 	lddqu 	fisttp psignb psignw psignd 	pabsb pabsw pabsd 	palignr pshufb 	pmulhrsw pmaddubsw 	phaddw phaddd phaddsw 	phsubw phsubd phsubsw extrq insertq 	movntsd movntss mpsadbw phminposuw 	pmuldq pmulld 	dpps dppd 	blendps blendpd blendvps blendvpd pblendvb pblendw 	pmaxsb pmaxuw pmaxsd pmaxud pminsb pminuw pminsd pminud 	roundps roundss roundpd roundsd 	insertps pinsrb pinsrd pinsrq 	extractps pextrb pextrd pextrq 	pmovsxbw pmovsxbd pmovsxbq pmovsxwd pmovsxwq pmovsxdq 	pmovzxbw pmovzxbd pmovzxbq pmovzxwd pmovzxwq pmovzxdq 	ptest 	pcmpeqq 	packusdw 	movntdqa pcmpgtq 	pcmpestri pcmpestrm pcmpistri pcmpistrm aesenc aesenclast aesdec aesdeclast aeskeygenassist aesimc xcryptcbc xcryptcfb xcryptctr xcryptecb xcryptofb 	xsha1 xsha256 montmul xstore vaddss vaddps vaddsd vaddpd vsubss vsubps vsubsd vsubpd 	vaddsubps vaddsubpd 	vhaddps vhaddpd vhsubps vhsubpd 	vmulss vmulps vmulsd vmulpd 	vmaxss vmaxps vmaxsd vmaxpd vminss vminps vminsd vminpd 	vandps vandpd vandnps vandnpd vorps vorpd vxorps vxorpd 	vblendps vblendpd vblendvps vblendvpd 	vcmpss vcomiss vucomiss vcmpsd vcomisd vucomisd vcmpps vcmppd 	vcmpeqss vcmpltss vcmpless vcmpunordss vcmpneqss vcmpnltss vcmpnless vcmpordss 	vcmpeq_uqss vcmpngess vcmpngtss vcmpfalsess vcmpneq_oqss vcmpgess vcmpgtss vcmptruess 	vcmpeq_osss vcmplt_oqss vcmple_oqss vcmpunord_sss vcmpneq_usss vcmpnlt_uqss vcmpnle_uqss vcmpord_sss 	vcmpeq_usss vcmpnge_uqss vcmpngt_uqss vcmpfalse_osss vcmpneq_osss vcmpge_oqss vcmpgt_oqss vcmptrue_usss 	vcmpeqps vcmpltps vcmpleps vcmpunordps vcmpneqps vcmpnltps vcmpnleps vcmpordps 	vcmpeq_uqps vcmpngeps vcmpngtps vcmpfalseps vcmpneq_oqps vcmpgeps vcmpgtps vcmptrueps 	vcmpeq_osps vcmplt_oqps vcmple_oqps vcmpunord_sps vcmpneq_usps vcmpnlt_uqps vcmpnle_uqps vcmpord_sps 	vcmpeq_usps vcmpnge_uqps vcmpngt_uqps vcmpfalse_osps vcmpneq_osps vcmpge_oqps vcmpgt_oqps vcmptrue_usps 	vcmpeqsd vcmpltsd vcmplesd vcmpunordsd vcmpneqsd vcmpnltsd vcmpnlesd vcmpordsd 	vcmpeq_uqsd vcmpngesd vcmpngtsd vcmpfalsesd vcmpneq_oqsd vcmpgesd vcmpgtsd vcmptruesd 	vcmpeq_ossd vcmplt_oqsd vcmple_oqsd vcmpunord_ssd vcmpneq_ussd vcmpnlt_uqsd vcmpnle_uqsd vcmpord_ssd 	vcmpeq_ussd vcmpnge_uqsd vcmpngt_uqsd vcmpfalse_ossd vcmpneq_ossd vcmpge_oqsd vcmpgt_oqsd vcmptrue_ussd 	vcmpeqpd vcmpltpd vcmplepd vcmpunordpd vcmpneqpd vcmpnltpd vcmpnlepd vcmpordpd 	vcmpeq_uqpd vcmpngepd vcmpngtpd vcmpfalsepd vcmpneq_oqpd vcmpgepd vcmpgtpd vcmptruepd 	vcmpeq_ospd vcmplt_oqpd vcmple_oqpd vcmpunord_spd vcmpneq_uspd vcmpnlt_uqpd vcmpnle_uqpd vcmpord_spd 	vcmpeq_uspd vcmpnge_uqpd vcmpngt_uqpd vcmpfalse_ospd vcmpneq_ospd vcmpge_oqpd vcmpgt_oqpd vcmptrue_uspd 	vcvtsd2ss vcvtpd2ps vcvtss2sd vcvtps2pd 	vcvtsi2ss vcvtss2si vcvttss2si 	vcvtpi2ps vcvtps2pi vcvttps2pi 	vcvtdq2ps vcvtps2dq vcvttps2dq 	vcvtdq2pd vcvtpd2dq vcvttpd2dq 	vcvtsi2sd vcvtsd2si vcvttsd2si 	vcvtpi2pd vcvtpd2pi vcvttpd2pi 	vdivss vdivps vdivsd vdivpd vsqrtss vsqrtps vsqrtsd vsqrtpd 	vdpps vdppd 	vmaskmovps vmaskmovpd 	vmovss vmovsd vmovaps vmovapd vmovups vmovupd vmovntps vmovntpd 	vmovhlps vmovlhps vmovlps vmovlpd vmovhps vmovhpd 	vmovsldup vmovshdup vmovddup 	vmovmskps vmovmskpd 	vroundss vroundps vroundsd vroundpd 	vrcpss vrcpps vrsqrtss vrsqrtps 	vunpcklps vunpckhps vunpcklpd vunpckhpd 	vbroadcastss vbroadcastsd vbroadcastf128 	vextractps vinsertps vextractf128 vinsertf128 	vshufps vshufpd vpermilps vpermilpd vperm2f128 	vtestps vtestpd 	vpaddb vpaddusb vpaddsb vpaddw vpaddusw vpaddsw vpaddd vpaddq 	vpsubb vpsubusb vpsubsb vpsubw vpsubusw vpsubsw vpsubd vpsubq 	vphaddw vphaddsw vphaddd vphsubw vphsubsw vphsubd 	vpsllw vpslld vpsllq vpsrlw vpsrld vpsrlq vpsraw vpsrad 	vpand vpandn vpor vpxor 	vpblendwb vpblendw 	vpsignb vpsignw vpsignd 	vpavgb vpavgw 	vpabsb vpabsw vpabsd 	vmovd vmovq vmovdqa vmovdqu vlddqu vmovntdq vmovntdqa vmaskmovdqu 	vpmovsxbw vpmovsxbd vpmovsxbq vpmovsxwd vpmovsxwq vpmovsxdq 	vpmovzxbw vpmovzxbd vpmovzxbq vpmovzxwd vpmovzxwq vpmovzxdq 	vpackuswb vpacksswb vpackusdw vpackssdw 	vpcmpeqb vpcmpeqw vpcmpeqd vpcmpeqq vpcmpgtb vpcmpgtw vpcmpgtd vpcmpgtq 	vpmaddubsw vpmaddwd 	vpmullw vpmulhuw vpmulhw vpmulhrsw vpmulld vpmuludq vpmuldq 	vpmaxub vpmaxsb vpmaxuw vpmaxsw vpmaxud vpmaxsd 	vpminub vpminsb vpminuw vpminsw vpminud vpminsd 	vpmovmskb vptest 	vpunpcklbw vpunpcklwd vpunpckldq vpunpcklqdq 	vpunpckhbw vpunpckhwd vpunpckhdq vpunpckhqdq 	vpslldq vpsrldq vpalignr 	vpshufb vpshuflw vpshufhw vpshufd 	vpextrb vpextrw vpextrd vpextrq vpinsrb vpinsrw vpinsrd vpinsrq 	vpsadbw vmpsadbw vphminposuw 	vpcmpestri vpcmpestrm vpcmpistri vpcmpistrm 	vpclmulqdq vaesenc vaesenclast vaesdec vaesdeclast vaeskeygenassist vaesimc 	vldmxcsr vstmxcsr vzeroall vzeroupper vbroadcasti128 vpbroadcastb vpbroadcastw vpbroadcastd vpbroadcastq 	vpblendd 	vpermd vpermq vperm2i128 	vextracti128 vinserti128 	vpmaskmovd vpmaskmovq 	vpsllvd vpsllvq vpsravd vpsrlvd vpsrldq 	vpgatherdd vpgatherqd vgatherdq vgatherqq 	vpermps vpermpd 	vgatherdpd vgatherqpd vgatherdps vgatherqps vfrczss vfrczps vfrczsd vfrczpd 	vpermil2ps vperlil2pd 	vtestps vtestpd 	vpcomub vpcomb vpcomuw vpcomw vpcomud vpcomd vpcomuq vpcomq 	vphaddubw vphaddbw vphaddubd vphaddbd vphaddubq vphaddbq 	vphadduwd vphaddwd vphadduwq vphaddwq vphaddudq vphadddq 	vphsubbw vphsubwd vphsubdq 	vpmacsdd vpmacssdd vpmacsdql vpmacssdql vpmacsdqh vpmacssdqh 	vpmacsww vpmacssww vpmacswd vpmacsswd 	vpmadcswd vpmadcsswd 	vpcmov vpperm 	vprotb vprotw vprotd vprotq 	vpshab vpshaw vpshad vpshaq 	vpshlb vpshlw vpshld vpshlq vcvtph2ps vcvtps2ph vfmaddss vfmaddps vfmaddsd vfmaddpd 	vfmsubss vfmsubps vfmsubsd vfmsubpd 	vnfmaddss vnfmaddps vnfmaddsd vnfmaddpd 	vnfmsubss vnfmsubps vnfmsubsd vnfmsubpd 	vfmaddsubps vfmaddsubpd vfmsubaddps vfmsubaddpd vfmadd132ss vfmadd213ss vfmadd231ss 	vfmadd132ps vfmadd213ps vfmadd231ps 	vfmadd132sd vfmadd213sd vfmadd231sd 	vfmadd132pd vfmadd213pd vfmadd231pd 	vfmaddsub132ps vfmaddsub213ps vfmaddsub231ps 	vfmaddsub132pd vfmaddsub213pd vfmaddsub231pd 	vfmsubadd132ps vfmsubadd213ps vfmsubadd231ps 	vfmsubadd132pd vfmsubadd213pd vfmsubadd231pd 	vfmsub132ss vfmsub213ss vfmsub231ss 	vfmsub132ps vfmsub213ps vfmsub231ps 	vfmsub132sd vfmsub213sd vfmsub231sd 	vfmsub132pd vfmsub213pd vfmsub231pd 	vfnmadd132ss vfnmadd213ss vfnmadd231ss 	vfnmadd132ps vfnmadd213ps vfnmadd231ps 	vfnmadd132sd vfnmadd213sd vfnmadd231sd 	vfnmadd132pd vfnmadd213pd vfnmadd231pd 	vfnmsub132ss vfnmsub213ss vfnmsub231ss 	vfnmsub132ps vfnmsub213ps vfnmsub231ps 	vfnmsub132sd vfnmsub213sd vfnmsub231sd 	vfnmsub132pd vfnmsub213pd vfnmsub231pd"
+            }
+        },
+        "Bash": {
+            "file_extension": ["sh", "bsh", "ksh"],
+            "lexer": "bash",
+            "keywords": {
+                "0": "alias ar asa awk banner basename bash bc bdiff break bunzip2 bzip2 cal calendar case cat cc cd chmod cksum clear cmp col comm compress continue cp cpio crypt csplit ctags cut date dc dd declare deroff dev df diff diff3 dircmp dirname do done du echo ed egrep elif else env esac eval ex exec exit expand export expr false fc fgrep fi file find fmt fold for function functions getconf getopt getopts grep gres hash head help history iconv id if in integer jobs join kill local lc let line ln logname look ls m4 mail mailx make man mkdir more mt mv newgrp nl nm nohup ntps od pack paste patch pathchk pax pcat perl pg pr print printf ps pwd read readonly red return rev rm rmdir sed select set sh shift size sleep sort spell split start stop strings strip stty sum suspend sync tail tar tee test then time times touch tr trap true tsort tty type typeset ulimit umask unalias uname uncompress unexpand uniq unpack unset until uudecode uuencode vi vim vpax wait wc whence which while who wpaste wstart xargs zcat chgrp chown chroot dir dircolors factor groups hostid install link md5sum mkfifo mknod nice pinky printenv ptx readlink seq sha1sum shred stat su tac unlink users vdir whoami yes"
+            }
+        },
+        "Batch": {
+            "file_extension": ["bat", "cmd", "nt"],
+            "lexer": "batch",
+            "keywords": {
+                "0": "assoc aux break call cd chcp chdir choice cls cmdextversion color com1 com2 com3 com4 con copy ctty date defined del dir do dpath echo else endlocal erase errorlevel exist exit for ftype goto if in lpt1 lpt2 lpt3 lpt4 md mkdir move not nul path pause popd prompt prn pushd rd rem ren rename rmdir set setlocal shift start time title type ver verify vol"
+            }
+        },
+        "CMake": {
+            "file_extension": ["cmake", "cmake.in", "ctest", "ctest.in"],
+            "lexer": "cmake",
+            "keywords": {
+                "0": "add_custom_command add_custom_target add_definitions add_dependencies add_executable add_library add_subdirectory add_test aux_source_directory build_command build_name cmake_minimum_required configure_file create_test_sourcelist else elseif enable_language enable_testing endforeach endif endmacro endwhile exec_program execute_process export_library_dependencies file find_file find_library find_package find_path find_program fltk_wrap_ui foreach get_cmake_property get_directory_property get_filename_component get_source_file_property get_target_property get_test_property if include include_directories include_external_msproject include_regular_expression install install_files install_programs install_targets link_directories link_libraries list load_cache load_command macro make_directory mark_as_advanced math message option output_required_files project qt_wrap_cpp qt_wrap_ui remove remove_definitions separate_arguments set set_directory_properties set_source_files_properties set_target_properties set_tests_properties site_name source_group string subdir_depends subdirs target_link_libraries try_compile try_run use_mangled_mesa utility_source variable_requires vtk_make_instantiator vtk_wrap_java vtk_wrap_python vtk_wrap_tcl while write_file",
+                "2": "ABSOLUTE ABSTRACT ADDITIONAL_MAKE_CLEAN_FILES ALL AND APPEND ARGS ASCII BEFORE CACHE CACHE_VARIABLES CLEAR COMMAND COMMANDS COMMAND_NAME COMMENT COMPARE COMPILE_FLAGS COPYONLY DEFINED DEFINE_SYMBOL DEPENDS DOC EQUAL ESCAPE_QUOTES EXCLUDE EXCLUDE_FROM_ALL EXISTS EXPORT_MACRO EXT EXTRA_INCLUDE FATAL_ERROR FILE FILES FORCE FUNCTION GENERATED GLOB GLOB_RECURSE GREATER GROUP_SIZE HEADER_FILE_ONLY HEADER_LOCATION IMMEDIATE INCLUDES INCLUDE_DIRECTORIES INCLUDE_INTERNALS INCLUDE_REGULAR_EXPRESSION LESS LINK_DIRECTORIES LINK_FLAGS LOCATION MACOSX_BUNDLE MACROS MAIN_DEPENDENCY MAKE_DIRECTORY MATCH MATCHALL MATCHES MODULE NAME NAME_WE NOT NOTEQUAL NO_SYSTEM_PATH OBJECT_DEPENDS OPTIONAL OR OUTPUT OUTPUT_VARIABLE PATH PATHS POST_BUILD POST_INSTALL_SCRIPT PREFIX PREORDER PRE_BUILD PRE_INSTALL_SCRIPT PRE_LINK PROGRAM PROGRAM_ARGS PROPERTIES QUIET RANGE READ REGEX REGULAR_EXPRESSION REPLACE REQUIRED RETURN_VALUE RUNTIME_DIRECTORY SEND_ERROR SHARED SOURCES STATIC STATUS STREQUAL STRGREATER STRLESS SUFFIX TARGET TOLOWER TOUPPER VAR VARIABLES VERSION WIN32 WRAP_EXCLUDE WRITE APPLE  MINGW MSYS CYGWIN  BORLAND WATCOM MSVC MSVC_IDE MSVC60 MSVC70 MSVC71 MSVC80 CMAKE_COMPILER_2005 OFF ON"
+            }
+        },
+        "Apache Conf": {
+            "file_extension": ["conf"],
+            "lexer": "conf",
+            "keywords": {
+                "0": "acceptmutex acceptpathinfo accessconfig accessfilename action addalt addaltbyencoding addaltbytype addcharset adddefaultcharset adddescription addencoding addhandler addicon addiconbyencoding addiconbytype addinputfilter addlanguage addmodule addmoduleinfo addoutputfilter addoutputfilterbytype addtype agentlog alias aliasmatch all allow allowconnect allowencodedslashes allowoverride anonymous anonymous_authoritative anonymous_logemail anonymous_mustgiveemail anonymous_nouserid anonymous_verifyemail assignuserid authauthoritative authdbauthoritative authdbgroupfile authdbmauthoritative authdbmgroupfile authdbmtype authdbmuserfile authdbuserfile authdigestalgorithm authdigestdomain authdigestfile authdigestgroupfile authdigestnccheck authdigestnonceformat authdigestnoncelifetime authdigestqop authdigestshmemsize authgroupfile authldapauthoritative authldapbinddn authldapbindpassword authldapcharsetconfig authldapcomparednonserver authldapdereferencealiases authldapenabled authldapfrontpagehack authldapgroupattribute authldapgroupattributeisdn authldapremoteuserisdn authldapurl authname authtype authuserfile bindaddress browsermatch browsermatchnocase bs2000account bufferedlogs cachedefaultexpire cachedirlength cachedirlevels cachedisable cacheenable cacheexpirycheck cachefile cacheforcecompletion cachegcclean cachegcdaily cachegcinterval cachegcmemusage cachegcunused cacheignorecachecontrol cacheignoreheaders cacheignorenolastmod cachelastmodifiedfactor cachemaxexpire cachemaxfilesize cacheminfilesize cachenegotiateddocs cacheroot cachesize cachetimemargin cgimapextension charsetdefault charsetoptions charsetsourceenc checkspelling childperuserid clearmodulelist contentdigest cookiedomain cookieexpires cookielog cookiename cookiestyle cookietracking coredumpdirectory customlog dav davdepthinfinity davlockdb davmintimeout defaulticon defaultlanguage defaulttype define deflatebuffersize deflatecompressionlevel deflatefilternote deflatememlevel deflatewindowsize deny directory directoryindex directorymatch directoryslash documentroot dumpioinput dumpiooutput enableexceptionhook enablemmap enablesendfile errordocument errorlog example expiresactive expiresbytype expiresdefault extendedstatus extfilterdefine extfilteroptions fancyindexing fileetag files filesmatch forcelanguagepriority forcetype forensiclog from group header headername hostnamelookups identitycheck ifdefine ifmodule imapbase imapdefault imapmenu include indexignore indexoptions indexorderdefault isapiappendlogtoerrors isapiappendlogtoquery isapicachefile isapifakeasync isapilognotsupported isapireadaheadbuffer keepalive keepalivetimeout languagepriority ldapcacheentries ldapcachettl ldapconnectiontimeout ldapopcacheentries ldapopcachettl ldapsharedcachefile ldapsharedcachesize ldaptrustedca ldaptrustedcatype limit limitexcept limitinternalrecursion limitrequestbody limitrequestfields limitrequestfieldsize limitrequestline limitxmlrequestbody listen listenbacklog loadfile loadmodule location locationmatch lockfile logformat loglevel maxclients maxkeepaliverequests maxmemfree maxrequestsperchild maxrequestsperthread maxspareservers maxsparethreads maxthreads maxthreadsperchild mcachemaxobjectcount mcachemaxobjectsize mcachemaxstreamingbuffer mcacheminobjectsize mcacheremovalalgorithm mcachesize metadir metafiles metasuffix mimemagicfile minspareservers minsparethreads mmapfile modmimeusepathinfo multiviewsmatch namevirtualhost nocache noproxy numservers nwssltrustedcerts nwsslupgradeable options order passenv pidfile port protocolecho proxy proxybadheader proxyblock proxydomain proxyerroroverride proxyiobuffersize proxymatch proxymaxforwards proxypass proxypassreverse proxypreservehost proxyreceivebuffersize proxyremote proxyremotematch proxyrequests proxytimeout proxyvia qsc readmename redirect redirectmatch redirectpermanent redirecttemp refererignore refererlog removecharset removeencoding removehandler removeinputfilter removelanguage removeoutputfilter removetype requestheader require resourceconfig rewritebase rewritecond rewriteengine rewritelock rewritelog rewriteloglevel rewritemap rewriteoptions rewriterule rlimitcpu rlimitmem rlimitnproc satisfy scoreboardfile script scriptalias scriptaliasmatch scriptinterpretersource scriptlog scriptlogbuffer scriptloglength scriptsock securelisten sendbuffersize serveradmin serveralias serverlimit servername serverpath serverroot serversignature servertokens servertype setenv setenvif setenvifnocase sethandler setinputfilter setoutputfilter singlelisten ssiendtag ssierrormsg ssistarttag ssitimeformat ssiundefinedecho sslcacertificatefile sslcacertificatepath sslcarevocationfile sslcarevocationpath sslcertificatechainfile sslcertificatefile sslcertificatekeyfile sslciphersuite sslengine sslmutex ssloptions sslpassphrasedialog sslprotocol sslproxycacertificatefile sslproxycacertificatepath sslproxycarevocationfile sslproxycarevocationpath sslproxyciphersuite sslproxyengine sslproxymachinecertificatefile sslproxymachinecertificatepath sslproxyprotocol sslproxyverify sslproxyverifydepth sslrandomseed sslrequire sslrequiressl sslsessioncache sslsessioncachetimeout sslusername sslverifyclient sslverifydepth startservers startthreads suexecusergroup threadlimit threadsperchild threadstacksize timeout transferlog typesconfig unsetenv usecanonicalname user userdir virtualdocumentroot virtualdocumentrootip virtualhost virtualscriptalias virtualscriptaliasip win32disableacceptex xbithack",
+                "2": "on off standalone inetd force-response-1.0 downgrade-1.0 nokeepalive indexes includes followsymlinks none x-compress x-gzip"
+            }
+        },
+        "C C++": {
+            "file_extension": ["c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx", "ipp", "m", "mm", "sma", "cs", "rc", "rc2", "dlg", "vala", "mak"],
+            "lexer": "cpp",
+            "keywords": {
+                "0": "and and_eq asm auto bitand bitor bool break case catch char class compl const const_cast constexpr continue default delete do double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable namespace new not not_eq operator or or_eq private protected public register reinterpret_cast return short signed sizeof static static_cast struct switch template this throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor xor_eq @class @defs @protocol @required @optional @end @interface @public @package @protected @private @property @implementation @synthesize @dynamic @throw @try @catch @finally @synchronized @autoreleasepool @selector @encode @compatibility_alias"
+            }
+        },
+        "CSS": {
+            "file_extension": ["css"],
+            "lexer": "css",
+            "keywords": {
+            }
+        },
+        "Go": {
+            "file_extension": ["go"],
+            "lexer": "cpp",
+            "keywords": {
+                "0": "bool byte break case chan complex64 complex128 const continue defer default  else  for func go goto fallthrough false float32 float64 if import int interface int8 int16 int32 int64 len map nil package range return select string struct switch true type uint uintptr uint8 uint16 uint32 uint64  var"
+            }
+        },
+        "IDL": {
+            "file_extension": ["idl", "odl"],
+            "lexer": "cpp",
+            "keywords": {
+                "0": "aggregatable allocate appobject arrays async async_uuid auto_handle bindable boolean broadcast byte byte_count call_as callback char coclass code comm_status const context_handle context_handle_noserialize context_handle_serialize control cpp_quote custom decode default defaultbind defaultcollelem defaultvalue defaultvtable dispinterface displaybind dllname double dual enable_allocate encode endpoint entry enum error_status_t explicit_handle fault_status first_is float handle_t heap helpcontext helpfile helpstring helpstringcontext helpstringdll hidden hyper id idempotent ignore iid_as iid_is immediatebind implicit_handle import importlib in include in_line int __int64 __int3264 interface last_is lcid length_is library licensed local long max_is maybe message methods midl_pragma midl_user_allocate midl_user_free min_is module ms_union ncacn_at_dsp ncacn_dnet_nsp ncacn_http ncacn_ip_tcp ncacn_nb_ipx ncacn_nb_nb ncacn_nb_tcp ncacn_np ncacn_spx ncacn_vns_spp ncadg_ip_udp ncadg_ipx ncadg_mq ncalrpc nocode nonbrowsable noncreatable nonextensible notify object odl oleautomation optimize optional out out_of_line pipe pointer_default pragma properties propget propput propputref ptr public range readonly ref represent_as requestedit restricted retval shape short signed size_is small source strict_context_handle string struct switch switch_is switch_type transmit_as typedef uidefault union unique unsigned user_marshal usesgetlasterror uuid v1_enum vararg version void wchar_t wire_marshal attribute native noscript scriptable shared wstring inout"
+            }
+        },
+        "Java": {
+            "file_extension": ["java"],
+            "lexer": "cpp",
+            "keywords": {
+                "0": "abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try var void volatile while"
+            }
+        },
+        "JavaScript": {
+            "file_extension": ["js", "es", "json"],
+            "lexer": "cpp",
+            "keywords": {
+                "0": "abstract boolean break byte case catch char class const continue debugger default delete do double else enum export extends final finally float for function goto if implements import in instanceof int interface long native new package private protected public return short static super switch synchronized this throw throws transient try typeof var void volatile while with"
+            }
+        },
+        "Lua": {
+            "file_extension": ["lua"],
+            "lexer": "lua",
+            "keywords": {
+                "0": "and break do else elseif end for function if in local nil not or repeat return then until while false true goto",
+                "2": "assert collectgarbage dofile error _G getmetatable ipairs loadfile next pairs pcall print rawequal rawget rawset setmetatable tonumber tostring type _VERSION xpcall string table math coroutine io os debug getfenv gcinfo load loadlib loadstring require select setfenv unpack _LOADED LUA_PATH _REQUIREDNAME package rawlen package bit32 _ENV",
+                "3": "string.byte string.char string.dump string.find string.format string.gsub string.len string.lower string.rep string.sub string.upper table.concat table.insert table.remove table.sort math.abs math.acos math.asin math.atan math.atan2 math.ceil math.cos math.deg math.exp math.floor math.frexp math.ldexp math.log math.max math.min math.pi math.pow math.rad math.random math.randomseed math.sin math.sqrt math.tan string.gfind string.gmatch string.match string.reverse table.foreach table.foreachi table.getn table.setn table.maxn table.pack table.unpack math.cosh math.fmod math.huge math.log10 math.modf math.mod math.sinh math.tanh bit32.arshift bit32.band bit32.bnot bit32.bor bit32.btest bit32.bxor bit32.extract bit32.replace bit32.lrotate bit32.lshift bit32.rrotate bit32.rshift",
+                "4": "coroutine.create coroutine.resume coroutine.status coroutine.wrap coroutine.yield io.close io.flush io.input io.lines io.open io.output io.read io.tmpfile io.type io.write io.stdin io.stdout io.stderr os.clock os.date os.difftime os.execute os.exit os.getenv os.remove os.rename os.setlocale os.time os.tmpname coroutine.running io.popen module package.loaders package.seeall package.config package.searchers package.searchpath require package.cpath package.loaded package.loadlib package.path package.preload"
+            }
+        },
+        "NSIS": {
+            "file_extension": ["nsi", "nsh"],
+            "lexer": "nsis",
+            "keywords": {
+                "0": "!addincludedir !addplugindir MakeNSIS Portions Contributors: Abort AddBrandingImage AddSize AutoCloseWindow BGFont BGGradient BrandingText BringToFront Call CallInstDLL Caption ChangeUI ClearErrors ComponentText GetDLLVersion GetDLLVersionLocal GetFileTime GetFileTimeLocal CopyFiles CRCCheck CreateDirectory CreateFont CreateShortCut SetDatablockOptimize DeleteINISec DeleteINIStr DeleteRegKey DeleteRegValue Delete DetailPrint DirText DirShow DirVar DirVerify GetInstDirError AllowRootDirInstall CheckBitmap EnableWindow EnumRegKey EnumRegValue Exch Exec ExecWait ExecShell ExpandEnvStrings FindWindow FindClose FindFirst FindNext File FileBufSize FlushINI ReserveFile FileClose FileErrorText FileOpen FileRead FileWrite FileReadByte FileWriteByte FileSeek Function FunctionEnd GetDlgItem GetFullPathName GetTempFileName HideWindow Icon IfAbort IfErrors IfFileExists IfRebootFlag IfSilent InstallDirRegKey InstallColors InstallDir InstProgressFlags InstType IntOp IntCmp IntCmpU IntFmt IsWindow Goto LangString LangStringUP LicenseData LicenseForceSelection LicenseLangString LicenseText LicenseBkColor LoadLanguageFile LogSet LogText MessageBox Nop Name OutFile Page PageCallbacks PageEx PageExEnd Pop Push Quit ReadINIStr ReadRegDWORD ReadRegStr ReadEnvStr Reboot RegDLL Rename Return RMDir Section SectionEnd SectionIn SubSection SectionGroup SubSectionEnd SectionGroupEnd SearchPath SectionSetFlags SectionGetFlags SectionSetInstTypes SectionGetInstTypes SectionGetText SectionSetText SectionGetSize SectionSetSize GetCurInstType SetCurInstType InstTypeSetText InstTypeGetText SendMessage SetAutoClose SetCtlColors SetBrandingImage SetCompress SetCompressor SetCompressorDictSize SetCompressionLevel SetDateSave SetDetailsView SetDetailsPrint SetErrors SetErrorLevel GetErrorLevel SetFileAttributes SetFont SetOutPath SetOverwrite SetPluginUnload SetRebootFlag SetShellVarContext SetSilent ShowInstDetails ShowUninstDetails ShowWindow SilentInstall SilentUnInstall Sleep StrCmp StrCpy StrLen SubCaption UninstallExeName UninstallCaption UninstallIcon UninstPage UninstallText UninstallSubCaption UnRegDLL WindowIcon WriteINIStr WriteRegBin WriteRegDWORD WriteRegStr WriteRegExpandStr WriteUninstaller XPStyle !packhdr !system !execute !AddIncludeDir !include !cd !ifdef !ifndef !endif !define !undef !else !echo !warning !error !verbose !macro !macroend !insertmacro !ifmacrodef !ifmacrondef MiscButtonText DetailsButtonText UninstallButtonText InstallButtonText SpaceTexts CompletedText GetFunctionAddress GetLabelAddress GetCurrentAddress !AddPluginDir InitPluginsDir AllowSkipFiles Var VIAddVersionKey VIProductVersion LockWindow",
+                "2": "$0 $1 $2 $3 $4 $5 $6 $7 $8 $9 $R0 $R1 $R2 $R3 $R4 $R5 $R6 $R7 $R8 $R9 $\t $\" $\' $\` $VARNAME $0, $INSTDIR $OUTDIR $CMDLINE $LANGUAGE $PROGRAMFILES $COMMONFILES $DESKTOP $EXEDIR ${NSISDIR} $WINDIR $SYSDIR $TEMP $STARTMENU $SMPROGRAMS $SMSTARTUP $QUICKLAUNCH $DOCUMENTS $SENDTO $RECENT $FAVORITES $MUSIC $PICTURES $VIDEOS $NETHOOD $FONTS $TEMPLATES $APPDATA $PRINTHOOD $INTERNET_CACHE $COOKIES $HISTORY $PROFILE $ADMINTOOLS $RESOURCES $RESOURCES_LOCALIZED $CDBURN_AREA $HWNDPARENT $PLUGINSDIR $$ $\r $\n",
+                "3": "ARCHIVE FILE_ATTRIBUTE_ARCHIVE FILE_ATTRIBUTE_HIDDEN FILE_ATTRIBUTE_NORMAL FILE_ATTRIBUTE_OFFLINE FILE_ATTRIBUTE_READONLY FILE_ATTRIBUTE_SYSTEM FILE_ATTRIBUTE_TEMPORARY HIDDEN HKCC HKCR HKCU HKDD HKEY_CLASSES_ROOT HKEY_CURRENT_CONFIG HKEY_CURRENT_USER HKEY_DYN_DATA HKEY_LOCAL_MACHINE HKEY_PERFORMANCE_DATA HKEY_USERS HKLM HKPD HKU IDABORT IDCANCEL IDIGNORE IDNO IDOK IDRETRY IDYES MB_ABORTRETRYIGNORE MB_DEFBUTTON1 MB_DEFBUTTON2 MB_DEFBUTTON3 MB_DEFBUTTON4 MB_ICONEXCLAMATION MB_ICONINFORMATION MB_ICONQUESTION MB_ICONSTOP MB_OK MB_OKCANCEL MB_RETRYCANCEL MB_RIGHT MB_SETFOREGROUND MB_TOPMOST MB_YESNO MB_YESNOCANCEL NORMAL OFFLINE READONLY SW_SHOWMAXIMIZED SW_SHOWMINIMIZED SW_SHOWNORMAL SYSTEM TEMPORARY auto colored false force hide ifnewer nevershow normal off on show silent silentlog smooth true try lzma zlib bzip2 none listonly textonly both top left bottom right license components directory instfiles uninstConfirm custom all leave current ifdiff lastused LEFT RIGHT CENTER dlg_id ALT CONTROL EXT SHIFT open print manual alwaysoff"
+            }
+        },
+        "Pascal": {
+            "file_extension": ["dpr", "dpk", "pas", "dfm", "inc", "pp"],
+            "lexer": "pascal",
+            "keywords": {
+                "0": "absolute abstract and array as asm assembler automated begin case cdecl class const constructor delayed deprecated destructor dispid dispinterface div do downto dynamic else end except experimental export exports external far file final finalization finally for forward function goto helper if implementation in inherited initialization inline interface is label library message mod near nil not object of on operator or out overload override packed pascal platform private procedure program property protected public published raise record reference register reintroduce repeat resourcestring safecall sealed set shl shr static stdcall strict string then threadvar to try type unit unsafe until uses var varargs virtual while winapi with xor add default implements index name nodefault read readonly remove stored write writeonly"
+            }
+        },
+        "Perl": {
+            "file_extension": ["pl", "pm", "pod"],
+            "lexer": "perl",
+            "keywords": {
+                "0": "NULL __FILE__ __LINE__ __PACKAGE__ __DATA__ __END__ AUTOLOAD BEGIN CORE DESTROY END EQ GE GT INIT LE LT NE CHECK abs accept alarm and atan2 bind binmode bless caller chdir chmod chomp chop chown chr chroot close closedir cmp connect continue cos crypt dbmclose dbmopen defined delete die do dump each else elsif endgrent endhostent endnetent endprotoent endpwent endservent eof eq eval exec exists exit exp fcntl fileno flock for foreach fork format formline ge getc getgrent getgrgid getgrnam gethostbyaddr gethostbyname gethostent getlogin getnetbyaddr getnetbyname getnetent getpeername getpgrp getppid getpriority getprotobyname getprotobynumber getprotoent getpwent getpwnam getpwuid getservbyname getservbyport getservent getsockname getsockopt glob gmtime goto grep gt hex if index int ioctl join keys kill last lc lcfirst le length link listen local localtime lock log lstat lt map mkdir msgctl msgget msgrcv msgsnd my ne next no not oct open opendir or ord our pack package pipe pop pos print printf prototype push quotemeta qu rand read readdir readline readlink readpipe recv redo ref rename require reset return reverse rewinddir rindex rmdir scalar seek seekdir select semctl semget semop send setgrent sethostent setnetent setpgrp setpriority setprotoent setpwent setservent setsockopt shift shmctl shmget shmread shmwrite shutdown sin sleep socket socketpair sort splice split sprintf sqrt srand stat study sub substr symlink syscall sysopen sysread sysseek system syswrite tell telldir tie tied time times truncate uc ucfirst umask undef unless unlink unpack unshift untie until use utime values vec wait waitpid wantarray warn while write xor given when default break say state UNITCHECK __SUB__ fc"
+            }
+        },
+        "PHP": {
+            "file_extension": ["php3", "phtml", "php"],
+            "lexer": "hypertext",
+            "keywords": {
+                "0": "a abbr acronym address applet area b base basefont bdo big blockquote body br button caption center cite code col colgroup dd del dfn dir div dl dt em fieldset font form frame frameset h1 h2 h3 h4 h5 h6 head hr html i iframe img input ins isindex kbd label legend li link map menu meta noframes noscript object ol optgroup option p param pre q s samp script select small span strike strong style sub sup table tbody td textarea tfoot th thead title tr tt u ul var xml xmlns abbr accept-charset accept accesskey action align alink alt archive axis background bgcolor border cellpadding cellspacing char charoff charset checked cite class classid clear codebase codetype color cols colspan compact content coords data datafld dataformatas datapagesize datasrc datetime declare defer dir disabled enctype event face for frame frameborder headers height href hreflang hspace http-equiv id ismap label lang language leftmargin link longdesc marginwidth marginheight maxlength media method multiple name nohref noresize noshade nowrap object onblur onchange onclick ondblclick onfocus onkeydown onkeypress onkeyup onload onmousedown onmousemove onmouseover onmouseout onmouseup onreset onselect onsubmit onunload profile prompt readonly rel rev rows rowspan rules scheme scope selected shape size span src standby start style summary tabindex target text title topmargin type usemap valign value valuetype version vlink vspace width text password checkbox radio submit reset file hidden image ^data- address article aside audio base canvas command details datalist embed figure figcaption footer header hgroup keygen mark menu meter nav output progress ruby rt rp section source time video wbr async autocomplete autofocus contenteditable contextmenu draggable form formaction formenctype formmethod formnovalidate formtarget list manifest max min novalidate pattern placeholder required reversed role sandbox scoped seamless sizes spellcheck srcdoc step public !doctype",
+                "2": "abstract boolean break byte case catch char class const continue debugger default delete do double else enum export extends final finally float for function goto if implements import in instanceof int interface long native new package private protected public return short static super switch synchronized this throw throws transient try typeof var void volatile while with",
+                "3": "addressof alias and as attribute base begin binary boolean byref byte byval call case cdbl cint clng compare const csng cstr currency date decimal declare defbool defbyte defcur defdate defdbl defdec defint deflng defobj defsng defstr defvar dim do double each else elseif empty end enum eqv erase error event exit explicit false for friend function get global gosub goto if imp implements in input integer is len let lib like load lock long loop lset me mid midb mod new next not nothing null object on option optional or paramarray preserve print private property public raiseevent randomize redim rem resume return rset seek select set single static step stop string sub text then time to true type typeof unload until variant wend while with withevents xor",
+                "4": "and as assert break class continue def del elif else except exec finally for from global if import in is lambda not or pass print raise return try while with yield",
+                "5": "and array as bool boolean break case cfunction class const continue declare default die directory do double echo else elseif empty enddeclare endfor endforeach endif endswitch endwhile eval exit extends false float for foreach function global goto if include include_once int integer isset list namespace new null object old_function or parent print real require require_once resource return static stdclass string switch true unset use var while xor abstract catch clone exception final implements interface php_user_filter private protected public this throw try __class__ __dir__ __file__ __function__ __line__ __method__ __namespace__ __sleep __wakeup",
+                "6": "ELEMENT DOCTYPE ATTLIST ENTITY NOTATION"
+            }
+        },
+        "PowerShell": {
+            "file_extension": ["ps1"],
+            "lexer": "powershell",
+            "keywords": {
+                "0": "begin break catch continue data do dynamicparam else elseif end exit filter finally for foreach from function if in local param private process return switch throw trap try until where while",
+                "2": "add-computer add-content add-history add-member add-pssnapin add-type checkpoint-computer clear-content clear-eventlog clear-history clear-item clear-itemproperty clear-variable compare-object complete-transaction connect-wsman convert-path convertfrom-csv convertfrom-securestring convertfrom-stringdata convertto-csv convertto-html convertto-securestring convertto-xml copy-item copy-itemproperty debug-process disable-computerrestore disable-psbreakpoint disable-pssessionconfiguration disable-wsmancredssp disconnect-wsman enable-computerrestore enable-psbreakpoint enable-psremoting enable-pssessionconfiguration enable-wsmancredssp enter-pssession exit-pssession export-alias export-clixml export-console export-counter export-csv export-formatdata export-modulemember export-pssession foreach-object format-custom format-list format-table format-wide get-acl get-alias get-authenticodesignature get-childitem get-command get-computerrestorepoint get-content get-counter get-credential get-culture get-date get-event get-eventlog get-eventsubscriber get-executionpolicy get-formatdata get-help get-history get-host get-hotfix get-item get-itemproperty get-job get-location get-member get-module get-psbreakpoint get-pscallstack get-psdrive get-psprovider get-pssession get-pssessionconfiguration get-pssnapin get-pfxcertificate get-process get-random get-service get-tracesource get-transaction get-uiculture get-unique get-variable get-wsmancredssp get-wsmaninstance get-winevent get-wmiobject group-object import-alias import-clixml import-counter import-csv import-localizeddata import-module import-pssession invoke-command invoke-expression invoke-history invoke-item invoke-wsmanaction invoke-wmimethod join-path limit-eventlog measure-command measure-object move-item move-itemproperty new-alias new-event new-eventlog new-item new-itemproperty new-module new-modulemanifest new-object new-psdrive new-pssession new-pssessionoption new-service new-timespan new-variable new-wsmaninstance new-wsmansessionoption new-webserviceproxy out-default out-file out-gridview out-host out-null out-printer out-string pop-location push-location read-host receive-job register-engineevent register-objectevent register-pssessionconfiguration register-wmievent remove-computer remove-event remove-eventlog remove-item remove-itemproperty remove-job remove-module remove-psbreakpoint remove-psdrive remove-pssession remove-pssnapin remove-variable remove-wsmaninstance remove-wmiobject rename-item rename-itemproperty reset-computermachinepassword resolve-path restart-computer restart-service restore-computer resume-service select-object select-string select-xml send-mailmessage set-acl set-alias set-authenticodesignature set-content set-date set-executionpolicy set-item set-itemproperty set-location set-psbreakpoint set-psdebug set-pssessionconfiguration set-service set-strictmode set-tracesource set-variable set-wsmaninstance set-wsmanquickconfig set-wmiinstance show-eventlog sort-object split-path start-job start-process start-service start-sleep start-transaction start-transcript stop-computer stop-job stop-process stop-service stop-transcript suspend-service tee-object test-computersecurechannel test-connection test-modulemanifest test-path test-wsman trace-command undo-transaction unregister-event unregister-pssessionconfiguration update-formatdata update-list update-typedata use-transaction wait-event wait-job wait-process where-object write-debug write-error write-eventlog write-host write-output write-progress write-verbose write-warning",
+                "3": "ac asnp cat cd chdir clc clear clhy cli clp cls clv compare copy cp cpi cpp cvpa dbp del diff dir ebp echo epal epcsv epsn erase etsn exsn fc fl foreach ft fw gal gbp gc gci gcm gcs gdr ghy gi gjb gl gm gmo gp gps group gsn gsnp gsv gu gv gwmi h history icm iex ihy ii ipal ipcsv ipmo ipsn ise iwmi kill lp ls man md measure mi mount move mp mv nal ndr ni nmo nsn nv ogv oh popd ps pushd pwd r rbp rcjb rd rdr ren ri rjb rm rmdir rmo rni rnp rp rsn rsnp rv rvpa rwmi sajb sal saps sasv sbp sc select set si sl sleep sort sp spjb spps spsv start sv swmi tee type where wjb write",
+                "4": "clear-host disable-psremoting enable-psremoting get-verb help importsystemmodules mkdir more prompt psedit tabexpansion"
+            }
+        },
+        "Properties": {
+            "file_extension": ["properties", "session", "ini", "inf", "url", "cfg", "cnf", "aut"],
+            "lexer": "props",
+            "keywords": {
+            }
+        },
+        "Makefile": {
+            "file_extension": ["mak"],
+            "lexer": "makefile",
+            "keywords": {
+            }
+        },
+        "Python": {
+            "file_extension": ["py", "pyw"],
+            "lexer": "python",
+            "keywords": {
+                "0": "and as assert break class continue def del elif else except exec finally for from global if import in is lambda not or pass print raise return try while with yield cdef cimport cpdef"
+            }
+        },
+        "SQL": {
+            "file_extension": ["sql"],
+            "lexer": "sql",
+            "keywords": {
+                "0": "absolute action add admin after aggregate alias all allocate alter and any are array as asc assertion at authorization before begin binary bit blob body boolean both breadth by call cascade cascaded case cast catalog char character check class clob close collate collation column commit completion connect connection constraint constraints constructor continue corresponding create cross cube current current_date current_path current_role current_time current_timestamp current_user cursor cycle data date day deallocate dec decimal declare default deferrable deferred delete depth deref desc describe descriptor destroy destructor deterministic dictionary diagnostics disconnect distinct domain double drop dynamic each else end end-exec equals escape every except exception exec execute exists exit external false fetch first float for foreign found from free full function general get global go goto grant group grouping having host hour identity if ignore immediate in indicator initialize initially inner inout input insert int integer intersect interval into is isolation iterate join key language large last lateral leading left less level like limit local localtime localtimestamp locator map match merge minute modifies modify module month names national natural nchar nclob new next no none not null numeric object of off old on only open operation option or order ordinality out outer output package pad parameter parameters partial path postfix precision prefix preorder prepare preserve primary prior privileges procedure public read reads real recursive ref references referencing relative restrict result return returns revoke right role rollback rollup routine row rows savepoint schema scroll scope search second section select sequence session session_user set sets size smallint some| space specific specifictype sql sqlexception sqlstate sqlwarning start state statement static structure system_user table temporary terminate than then time timestamp timezone_hour timezone_minute to trailing transaction translation treat trigger true under union unique unknown unnest update usage user using value values varchar variable varying view when whenever where with without work write year zone",
+                "3": "param author since return see deprecated todo",
+                "4": "acc~ept a~ppend archive log attribute bre~ak bti~tle c~hange cl~ear col~umn comp~ute conn~ect copy def~ine del desc~ribe disc~onnect e~dit exec~ute exit get help ho~st i~nput l~ist passw~ord pau~se pri~nt pro~mpt quit recover rem~ark repf~ooter reph~eader r~un sav~e set sho~w shutdown spo~ol sta~rt startup store timi~ng tti~tle undef~ine var~iable whenever oserror whenever sqlerror",
+                "5": "dbms_output.disable dbms_output.enable dbms_output.get_line dbms_output.get_lines dbms_output.new_line dbms_output.put dbms_output.put_line"
+            }
+        },
+        "VB": {
+            "file_extension": ["vb", "bas", "frm", "cls", "ctl", "pag", "dsr", "dob"],
+            "lexer": "vb",
+            "keywords": {
+                "0": "addressof alias and as attribute base begin binary boolean byref byte byval call case cdbl cint clng compare const csng cstr currency date decimal declare defbool defbyte defcur defdate defdbl defdec defint deflng defobj defsng defstr defvar dim do double each else elseif empty end enum eqv erase error event exit explicit false for friend function get global gosub goto if imp implements in input integer is len let lib like load lock long loop lset me mid midb mod new next not nothing null object on option optional or paramarray preserve print private property public raiseevent randomize redim rem resume return rset seek select set single static step stop string sub text then time to true type typeof unload until variant wend while with withevents xor addhandler andalso ansi assembly auto catch cbool cbyte cchar cdate cdec char class cobj continue csbyte cshort ctype cuint culng cushort custom default delegate directcast endif externalsource finally gettype handles imports inherits interface isfalse isnot istrue module mustinherit mustoverride my mybase myclass namespace narrowing notinheritable notoverridable of off operator orelse overloads overridable overrides partial protected readonly region removehandler sbyte shadows shared short strict structure synclock throw try trycast uinteger ulong unicode ushort using when widening writeonly",
+                "2": "appactivate beep chdir chdrive close filecopy get input kill line unlock mkdir name open print put reset rmdir savepicture savesetting seek sendkeys setattr width write"
+            }
+        },
+        "VBScript": {
+            "file_extension": ["vbs", "dsm"],
+            "lexer": "vbscript",
+            "keywords": {
+                "0": "addressof alias and as attribute base begin binary boolean byref byte byval call case cdbl cint clng compare const csng cstr currency date decimal declare defbool defbyte defcur defdate defdbl defdec defint deflng defobj defsng defstr defvar dim do double each else elseif empty end enum eqv erase error event exit explicit false for friend function get global gosub goto if imp implements in input integer is len let lib like load lock long loop lset me mid midb mod new next not nothing null object on option optional or paramarray preserve print private property public raiseevent randomize redim rem resume return rset seek select set single static step stop string sub text then time to true type typeof unload until variant wend while with withevents xor"
+            }
+        },
+        "Html": {
+            "file_extension": ["html", "htm", "asp", "shtml", "htd", "jsp", "xhtml"],
+            "lexer": "hypertext",
+            "keywords": {
+                "0": "a abbr acronym address applet area b base basefont bdo big blockquote body br button caption center cite code col colgroup dd del dfn dir div dl dt em fieldset font form frame frameset h1 h2 h3 h4 h5 h6 head hr html i iframe img input ins isindex kbd label legend li link map menu meta noframes noscript object ol optgroup option p param pre q s samp script select small span strike strong style sub sup table tbody td textarea tfoot th thead title tr tt u ul var xml xmlns abbr accept-charset accept accesskey action align alink alt archive axis background bgcolor border cellpadding cellspacing char charoff charset checked cite class classid clear codebase codetype color cols colspan compact content coords data datafld dataformatas datapagesize datasrc datetime declare defer dir disabled enctype event face for frame frameborder headers height href hreflang hspace http-equiv id ismap label lang language leftmargin link longdesc marginwidth marginheight maxlength media method multiple name nohref noresize noshade nowrap object onblur onchange onclick ondblclick onfocus onkeydown onkeypress onkeyup onload onmousedown onmousemove onmouseover onmouseout onmouseup onreset onselect onsubmit onunload profile prompt readonly rel rev rows rowspan rules scheme scope selected shape size span src standby start style summary tabindex target text title topmargin type usemap valign value valuetype version vlink vspace width text password checkbox radio submit reset file hidden image ^data- address article aside audio base canvas command details datalist embed figure figcaption footer header hgroup keygen mark menu meter nav output progress ruby rt rp section source time video wbr async autocomplete autofocus contenteditable contextmenu draggable form formaction formenctype formmethod formnovalidate formtarget list manifest max min novalidate pattern placeholder required reversed role sandbox scoped seamless sizes spellcheck srcdoc step public !doctype",
+                "2": "abstract boolean break byte case catch char class const continue debugger default delete do double else enum export extends final finally float for function goto if implements import in instanceof int interface long native new package private protected public return short static super switch synchronized this throw throws transient try typeof var void volatile while with",
+                "3": "addressof alias and as attribute base begin binary boolean byref byte byval call case cdbl cint clng compare const csng cstr currency date decimal declare defbool defbyte defcur defdate defdbl defdec defint deflng defobj defsng defstr defvar dim do double each else elseif empty end enum eqv erase error event exit explicit false for friend function get global gosub goto if imp implements in input integer is len let lib like load lock long loop lset me mid midb mod new next not nothing null object on option optional or paramarray preserve print private property public raiseevent randomize redim rem resume return rset seek select set single static step stop string sub text then time to true type typeof unload until variant wend while with withevents xor",
+                "4": "and as assert break class continue def del elif else except exec finally for from global if import in is lambda not or pass print raise return try while with yield",
+                "5": "and array as bool boolean break case cfunction class const continue declare default die directory do double echo else elseif empty enddeclare endfor endforeach endif endswitch endwhile eval exit extends false float for foreach function global goto if include include_once int integer isset list namespace new null object old_function or parent print real require require_once resource return static stdclass string switch true unset use var while xor abstract catch clone exception final implements interface php_user_filter private protected public this throw try __class__ __dir__ __file__ __function__ __line__ __method__ __namespace__ __sleep __wakeup",
+                "6": "ELEMENT DOCTYPE ATTLIST ENTITY NOTATION"
+            }
+        },
+        "Xml": {
+            "file_extension": ["xml", "xsl", "svg", "xul", "xsd", "dtd", "xslt", "axl", "xrc", "rdf"],
+            "lexer": "xml",
+            "keywords": {
+                "6": "ELEMENT DOCTYPE ATTLIST ENTITY NOTATION"
+            }
+        }
+    },
+    "lexers": {
+        "*": {
+            "style": {
+                "32": "$(font.base)",
+                "33": "back:#C0C0C0,$(font.base)",
+                "34": "fore:#0000FF,bold",
+                "35": "fore:#FF0000,bold",
+                "37": "fore:#C0C0C0,back:#FFFFFF"
+            }
+        },
+        "asm": {
+            "style": {
+                "1": "fore:#adadad",
+                "2": "fore:#ff0000",
+                "3": "$(colour.string)",
+                "4": "$(colour.operator),bold",
+                "6": "$(colour.keyword),bold",
+                "7": "fore:#0000ff",
+                "8": "fore:#46aa03,bold",
+                "9": "fore:#0000ff",
+                "10": "fore:#0000ff",
+                "11": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "12": "$(colour.char)",
+                "13": "fore:#000000,back:#E0C0E0,eolfilled",
+                "14": "fore:#B00040"
+            }
+        },
+        "bash": {
+            "style": {
+                "0": "fore:#808080,$(font.base)",
+                "1": "$(colour.error)",
+                "2": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "3": "$(colour.number)",
+                "4": "$(colour.keyword),bold",
+                "5": "$(colour.string),$(font.monospace)",
+                "6": "$(colour.char),$(font.monospace)",
+                "7": "$(colour.operator),bold",
+                "8": "fore:#000000",
+                "9": "fore:#000000,back:#FFE0E0",
+                "10": "fore:#000000,back:#FFFFE0",
+                "11": "fore:#FFFF00,back:#A08080",
+                "12": "fore:#000000,back:#DDD0DD",
+                "13": "fore:#7F007F,back:#DDD0DD,eolfilled,notbold"
+            }
+        },
+        "batch": {
+            "style": {
+                "0": "fore:#000000",
+                "1": "fore:#007F00,$(font.comment)",
+                "2": "$(colour.keyword),bold",
+                "3": "$(colour.string),back:#606060,fore:#FFFF00,eolfilled",
+                "4": "$(colour.preproc)",
+                "5": "fore:#007090,$(font.monospace),bold",
+                "6": "fore:#800080",
+                "7": "fore:#000000"
+            }
+        },
+        "cmake": {
+            "style": {
+                "0": "fore:#000000,$(font.base)",
+                "1": "fore:#007F00,$(font.comment)",
+                "2": "fore:#7F007F,back:#EEEEEE",
+                "3": "fore:#7F007F,back:#EEEEEE",
+                "4": "fore:#7F007F,back:#EEEEEE",
+                "5": "fore:#00007F,bold",
+                "6": "fore:#800000",
+                "7": "fore:#CC3300",
+                "8": "fore:#000000",
+                "9": "fore:#00007F,bold",
+                "10": "fore:#00007F,bold",
+                "11": "fore:#00007F,bold",
+                "12": "fore:#00007F,bold",
+                "13": "fore:#CC3300,back:#EEEEEE",
+                "14": "$(colour.number)"
+            }
+        },
+        "conf": {
+            "style": {
+                "0": "fore:#808080,$(font.base)",
+                "1": "fore:#007F00,$(font.comment)",
+                "2": "fore:#007F7F",
+                "3": "fore:#000000,back:#A0FFA0",
+                "4": "fore:#000000,back:#FFE0FF",
+                "5": "fore:#000000,back:#FFE0FF",
+                "6": "fore:#7F007F,$(font.monospace)",
+                "7": "bold",
+                "8": "fore:#007F7F,bold",
+                "9": "fore:#00007F,bold"
+            }
+        },
+        "cpp": {
+            "style": {
+                "0": "fore:#808080",
+                "1": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "2": "$(colour.code.comment.line),$(font.code.comment.line)",
+                "3": "$(colour.code.comment.doc),$(font.code.comment.doc)",
+                "4": "$(colour.number)",
+                "5": "$(colour.keyword),bold",
+                "6": "$(colour.string)",
+                "7": "$(colour.char)",
+                "8": "fore:#804080",
+                "9": "$(colour.preproc)",
+                "10": "$(colour.operator),bold",
+                "12": "fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled",
+                "13": "fore:#007F00,$(font.monospace),back:#E0FFE0,eolfilled",
+                "14": "fore:#3F7F3F,$(font.monospace),back:#E0F0FF,eolfilled",
+                "15": "$(colour.code.comment.doc),$(font.code.comment.doc)",
+                "16": "fore:#B00040",
+                "17": "fore:#3060A0,$(font.code.comment.doc)",
+                "18": "fore:#804020,$(font.code.comment.doc)",
+                "20": "$(colour.string),back:#FFF3FF,eolfilled",
+                "21": "$(font.monospace),fore:#007F00,back:#E0FFE0,eolfilled",
+                "22": "$(font.monospace),fore:#007F00,back:#E7FFD7,eolfilled",
+                "23": "fore:#659900",
+                "24": "$(colour.code.comment.doc)",
+                "25": "fore:#C06000",
+                "26": "fore:#BE07FF,$(font.code.comment.line)",
+                "32": "$(font.base)",
+                "64": "fore:#C0C0C0",
+                "65": "$(lexers.cpp.style.1),fore:#90B090",
+                "66": "$(lexers.cpp.style.2),fore:#90B090",
+                "67": "$(lexers.cpp.style.3),fore:#D0D0D0",
+                "68": "$(lexers.cpp.style.4),fore:#90B0B0",
+                "69": "$(lexers.cpp.style.5),fore:#9090B0",
+                "70": "$(lexers.cpp.style.6),fore:#B090B0",
+                "71": "$(lexers.cpp.style.7),fore:#B090B0",
+                "72": "$(lexers.cpp.style.8),fore:#C0C0C0",
+                "73": "$(lexers.cpp.style.9),fore:#B0B090",
+                "74": "$(lexers.cpp.style.10),fore:#B0B0B0",
+                "75": "$(lexers.cpp.style.11),fore:#B0B0B0",
+                "76": "$(lexers.cpp.style.12),fore:#000000",
+                "77": "$(lexers.cpp.style.13),fore:#90B090",
+                "78": "$(lexers.cpp.style.14),fore:#7FAF7F",
+                "79": "$(lexers.cpp.style.15),fore:#C0C0C0",
+                "80": "$(lexers.cpp.style.16),fore:#C0C0C0",
+                "81": "$(lexers.cpp.style.17),fore:#C0C0C0",
+                "82": "$(lexers.cpp.style.18),fore:#C0C0C0",
+                "84": "$(lexers.cpp.style.20),fore:#B090B0",
+                "85": "$(lexers.cpp.style.21),fore:#90B090",
+                "86": "$(lexers.cpp.style.22),fore:#90B090",
+                "87": "$(lexers.cpp.style.23),fore:#A0C090",
+                "88": "$(lexers.cpp.style.23),fore:#C0C0C0",
+                "89": "fore:#D7A090",
+                "90": "fore:#C3A1CF,$(font.code.comment.line)"
+            }
+        },
+        "css": {
+            "style": {
+                "0": "fore:#FF0080",
+                "1": "$(colour.keyword),bold",
+                "3": "fore:#800000",
+                "4": "$(colour.error)",
+                "5": "$(colour.operator)",
+                "6": "fore:#0040E0",
+                "7": "fore:#FF0000",
+                "8": "$(colour.string)",
+                "9": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "10": "$(colour.number),italics",
+                "11": "fore:#FF8000,bold",
+                "12": "$(colour.preproc)",
+                "13": "$(colour.string)",
+                "14": "$(colour.string)",
+                "15": "fore:#0040E0",
+                "16": "fore:#800000",
+                "17": "fore:#00A0E0",
+                "18": "fore:#C80000",
+                "19": "fore:#7F7F00",
+                "20": "fore:#7F7F00",
+                "21": "fore:#7F7F00",
+                "22": "$(colour.preproc),bold",
+                "32": "$(font.code.base)"
+            }
+        },
+        "lua": {
+            "style": {
+                "0": "fore:#FF0000",
+                "1": "$(colour.code.comment.box),$(font.code.comment.box),back:#D0F0F0,eolfilled",
+                "2": "$(colour.code.comment.line),$(font.code.comment.line)",
+                "3": "$(colour.notused),$(font.notused)",
+                "4": "$(colour.number)",
+                "5": "$(colour.keyword)",
+                "6": "$(colour.string)",
+                "7": "$(colour.char)",
+                "8": "$(colour.string),$(font.code.comment.box),back:#E0FFFF",
+                "9": "$(colour.preproc)",
+                "10": "$(colour.operator)",
+                "12": "back:#E0C0E0,eolfilled",
+                "13": "$(lexers.lua.style.5),back:#F5FFF5",
+                "14": "$(lexers.lua.style.5),back:#F5F5FF",
+                "15": "$(lexers.lua.style.5),back:#FFF5F5",
+                "16": "$(lexers.lua.style.5),back:#FFF5FF",
+                "17": "$(lexers.lua.style.5),back:#FFFFF5",
+                "18": "$(lexers.lua.style.5),back:#FFA0A0",
+                "19": "$(lexers.lua.style.5),back:#FFF5F5",
+                "20": "fore:#7F7F00",
+                "32": "$(font.code.base),fore:#000000"
+            }
+        },
+        "nsis": {
+            "style": {
+                "0": "fore:#000000,$(font.base)",
+                "1": "fore:#007F00,$(font.comment)",
+                "2": "fore:#999999,back:#EEEEEE",
+                "3": "fore:#999999,back:#EEEEEE",
+                "4": "fore:#999999,back:#EEEEEE",
+                "5": "fore:#00007F,bold",
+                "6": "fore:#CC3300",
+                "7": "fore:#FF9900",
+                "8": "fore:#000000",
+                "9": "fore:#00007F,bold",
+                "10": "fore:#00007F,bold",
+                "11": "fore:#00007F,bold",
+                "12": "fore:#00007F,bold",
+                "13": "fore:#CC3300,back:#EEEEEE",
+                "14": "fore:#007F7F",
+                "15": "fore:#00007F,bold",
+                "16": "fore:#00007F,bold",
+                "17": "fore:#00007F,bold",
+                "18": "fore:#007F00,$(font.comment),bold"
+            }
+        },
+        "pascal": {
+            "style": {
+                "0": "fore:#808080",
+                "2": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "3": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "4": "$(colour.code.comment.line),$(font.code.comment.line)",
+                "5": "$(colour.preproc)",
+                "6": "$(colour.preproc)",
+                "7": "$(colour.number)",
+                "8": "$(colour.number)",
+                "9": "$(colour.keyword),bold",
+                "10": "$(colour.string)",
+                "11": "fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled",
+                "12": "$(colour.char)",
+                "13": "$(colour.operator),bold",
+                "14": "fore:#804080",
+                "32": "$(font.base)"
+            }
+        },
+        "perl": {
+            "style": {
+                "0": "fore:#808080,$(font.base)",
+                "1": "$(colour.error)",
+                "2": "$(colour.code.comment.box),$(font.code.comment.box)",
+                "3": "fore:#004000,back:#E0FFE0,$(font.text),eolfilled",
+                "4": "$(colour.number)",
+                "5": "$(colour.keyword),bold",
+                "6": "$(colour.string),$(font.monospace)",
+                "7": "$(colour.char),$(font.monospace)",
+                "8": "$(colour.notused),$(font.notused)",
+                "9": "$(colour.notused),$(font.notused)",
+                "10": "$(colour.operator),bold",
+                "11": "fore:#000000",
+                "12": "fore:#000000,back:#FFE0E0",
+                "13": "fore:#000000,back:#FFFFE0",
+                "14": "fore:#000000,back:#FFE0FF",
+                "15": "fore:#000000,back:#E0E0E0",
+                "17": "fore:#000000,back:#A0FFA0",
+                "18": "fore:#000000,back:#F0E080",
+                "19": "fore:#FFFF00,back:#8080A0",
+                "20": "$(lexers.perl.style.6),back:#90FFFF",
+                "21": "fore:#600000,back:#FFF0D8,eolfilled",
+                "22": "fore:#000000,back:#DDD0DD",
+                "23": "fore:#7F007F,back:#DDD0DD,eolfilled,notbold",
+                "24": "fore:#7F007F,back:#DDD0DD,eolfilled,bold",
+                "25": "fore:#7F007F,back:#DDD0DD,eolfilled,italics",
+                "26": "fore:#7F007F,$(font.monospace),notbold",
+                "27": "$(lexers.perl.style.6)",
+                "28": "$(lexers.perl.style.20)",
+                "29": "$(lexers.perl.style.17)",
+                "30": "$(lexers.perl.style.13)",
+                "31": "fore:#004000,back:#C0FFC0,$(font.monospace),eolfilled",
+                "40": "$(lexers.perl.style.10),italics",
+                "41": "fore:#C000C0,bold",
+                "42": "fore:#C000C0,back:#FFF0FF,eolfilled",
+                "43": "$(lexers.perl.style.6),fore:#D00000,bold",
+                "44": "$(lexers.perl.style.18)",
+                "54": "$(lexers.perl.style.17),fore:#D00000,bold",
+                "55": "$(lexers.perl.style.18),fore:#D00000,bold",
+                "57": "$(lexers.perl.style.20),fore:#D00000,bold",
+                "61": "$(lexers.perl.style.24),fore:#D00000,bold",
+                "62": "$(lexers.perl.style.61)",
+                "64": "$(lexers.perl.style.43)",
+                "65": "$(lexers.perl.style.57)",
+                "66": "$(lexers.perl.style.54)"
+            }
+        },
+        "hypertext": {
+            "style": {
+                "0": "fore:#000000,$(font.text)",
+                "1": "fore:#000080",
+                "2": "fore:#FF0000",
+                "3": "fore:#008080",
+                "4": "fore:#FF0000",
+                "5": "$(colour.number)",
+                "6": "$(colour.string)",
+                "7": "$(colour.string)",
+                "8": "fore:#800080",
+                "9": "fore:#808000,$(font.text.comment)",
+                "10": "fore:#800080,$(font.text)",
+                "11": "fore:#000080",
+                "12": "fore:#0000FF",
+                "13": "fore:#0000FF",
+                "14": "fore:#000080",
+                "15": "back:#FFFF00",
+                "16": "back:#FFDF00",
+                "17": "back:#FFDF00",
+                "18": "fore:#0000FF,back:#FFEFBF",
+                "19": "fore:#FF00FF,back:#FFEFFF",
+                "20": "fore:#000000,back:#FFFFD0",
+                "21": "fore:#000080,$(colour.hypertext.sgml.back)",
+                "22": "fore:#000080,$(colour.hypertext.sgml.back),bold",
+                "23": "fore:#006600,$(colour.hypertext.sgml.back)",
+                "24": "fore:#800000,$(colour.hypertext.sgml.back)",
+                "25": "fore:#993300,$(colour.hypertext.sgml.back)",
+                "26": "fore:#800000,back:#FF6666",
+                "27": "fore:#3366FF,$(colour.hypertext.sgml.back)",
+                "28": "fore:#333333,$(colour.hypertext.sgml.back)",
+                "29": "fore:#808000,$(colour.hypertext.sgml.back)",
+                "31": "fore:#000066,back:#CCCCE0",
+                "34": "fore:#0000FF,notbold,$(font.text)",
+                "35": "fore:#FF0000,notbold,$(font.text)",
+                "40": "fore:#7F7F00",
+                "41": "fore:#000000,bold,$(fontcolour.js),eolfilled",
+                "42": "$(colour.code.comment.box),$(fontcolour.js),eolfilled",
+                "43": "$(colour.code.comment.line),$(fontcolour.js)",
+                "44": "$(colour.code.comment.doc),bold,$(fontcolour.js),eolfilled",
+                "45": "$(colour.number),$(fontcolour.js)",
+                "46": "fore:#000000,$(fontcolour.js)",
+                "47": "$(colour.keyword),bold,$(fontcolour.js)",
+                "48": "$(colour.string),$(fontcolour.js)",
+                "49": "$(colour.string),$(fontcolour.js)",
+                "50": "$(colour.operator),bold,$(fontcolour.js)",
+                "51": "back:#BFBBB0,eolfilled",
+                "52": "back:#FFBBB0",
+                "55": "fore:#7F7F00",
+                "56": "fore:#000000,bold,$(font.js),$(colour.hypertext.server.javascript.back),eolfilled",
+                "57": "fore:#007F00,$(font.js),$(colour.hypertext.server.javascript.back),eolfilled",
+                "58": "fore:#007F00,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "59": "fore:#7F7F7F,bold,$(font.js),$(colour.hypertext.server.javascript.back),eolfilled",
+                "60": "fore:#007F7F,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "61": "fore:#000000,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "62": "fore:#00007F,bold,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "63": "fore:#7F007F,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "64": "fore:#7F007F,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "65": "fore:#000000,bold,$(font.js),$(colour.hypertext.server.javascript.back)",
+                "66": "back:#BFBBB0,eolfilled",
+                "67": "back:#FFBBB0",
+                "71": "$(font.vbs),$(colour.hypertext.client.vbs.back),fore:#000000,eolfilled",
+                "72": "$(font.comment),$(colour.hypertext.client.vbs.back),fore:#008000,eolfilled",
+                "73": "$(font.vbs),$(colour.hypertext.client.vbs.back),fore:#008080,eolfilled",
+                "74": "$(font.vbs),$(colour.hypertext.client.vbs.back),fore:#000080,bold,eolfilled",
+                "75": "$(font.vbs),$(colour.hypertext.client.vbs.back),fore:#800080,eolfilled",
+                "76": "$(font.vbs),$(colour.hypertext.client.vbs.back),fore:#000080,eolfilled",
+                "77": "$(font.vbs),back:#7F7FFF,fore:#000080,eolfilled",
+                "81": "$(font.vbs),$(colour.hypertext.server.vbs.back),fore:#000000,eolfilled",
+                "82": "$(font.comment),$(colour.hypertext.server.vbs.back),fore:#008000,eolfilled",
+                "83": "$(font.vbs),$(colour.hypertext.server.vbs.back),fore:#008080,eolfilled",
+                "84": "$(font.vbs),$(colour.hypertext.server.vbs.back),fore:#000080,bold,eolfilled",
+                "85": "$(font.vbs),$(colour.hypertext.server.vbs.back),fore:#800080,eolfilled",
+                "86": "$(font.vbs),$(colour.hypertext.server.vbs.back),fore:#000080,eolfilled",
+                "87": "$(font.vbs),back:#7F7FBF,fore:#000080,eolfilled",
+                "90": "fore:#808080",
+                "91": "fore:#808080,$(colour.hypertext.client.python.back),eolfilled",
+                "92": "fore:#007F00,$(font.comment),$(colour.hypertext.client.python.back),eolfilled",
+                "93": "fore:#007F7F,$(colour.hypertext.client.python.back),eolfilled",
+                "94": "fore:#7F007F,$(font.monospace),$(colour.hypertext.client.python.back),eolfilled",
+                "95": "fore:#7F007F,$(font.monospace),$(colour.hypertext.client.python.back),eolfilled",
+                "96": "fore:#00007F,bold,$(colour.hypertext.client.python.back),eolfilled",
+                "97": "fore:#7F0000,$(colour.hypertext.client.python.back),eolfilled",
+                "98": "fore:#7F0000,$(colour.hypertext.client.python.back),eolfilled",
+                "99": "fore:#0000FF,bold,$(colour.hypertext.client.python.back),eolfilled",
+                "100": "fore:#007F7F,bold,$(colour.hypertext.client.python.back),eolfilled",
+                "101": "bold,$(colour.hypertext.client.python.back),eolfilled",
+                "102": "$(colour.hypertext.client.python.back),eolfilled",
+                "104": "fore:#007F00,italics,$(colour.hypertext.server.php.back)",
+                "105": "fore:#808080",
+                "106": "fore:#808080,$(colour.hypertext.server.python.back),eolfilled",
+                "107": "fore:#007F00,$(font.comment),$(colour.hypertext.server.python.back),eolfilled",
+                "108": "fore:#007F7F,$(colour.hypertext.server.python.back),eolfilled",
+                "109": "fore:#7F007F,$(font.monospace),$(colour.hypertext.server.python.back),eolfilled",
+                "110": "fore:#7F007F,$(font.monospace),$(colour.hypertext.server.python.back),eolfilled",
+                "111": "fore:#00007F,bold,$(colour.hypertext.server.python.back),eolfilled",
+                "112": "fore:#7F0000,$(colour.hypertext.server.python.back),eolfilled",
+                "113": "fore:#7F0000,$(colour.hypertext.server.python.back),eolfilled",
+                "114": "fore:#0000FF,bold,$(colour.hypertext.server.python.back),eolfilled",
+                "115": "fore:#007F7F,bold,$(colour.hypertext.server.python.back),eolfilled",
+                "116": "bold,$(colour.hypertext.server.python.back),eolfilled",
+                "117": "$(colour.hypertext.server.python.back),eolfilled",
+                "118": "fore:#000033,$(colour.hypertext.server.php.back),eolfilled",
+                "119": "fore:#007F00,$(colour.hypertext.server.php.back)",
+                "120": "fore:#009F00,$(colour.hypertext.server.php.back)",
+                "121": "fore:#7F007F,italics,$(colour.hypertext.server.php.back)",
+                "122": "fore:#CC9900,$(colour.hypertext.server.php.back)",
+                "123": "fore:#00007F,italics,$(colour.hypertext.server.php.back)",
+                "124": "fore:#999999,$(font.comment),$(colour.hypertext.server.php.back)",
+                "125": "fore:#666666,italics,$(font.comment),$(colour.hypertext.server.php.back)",
+                "126": "fore:#007F00,italics,$(colour.hypertext.server.php.back)",
+                "127": "fore:#000000,$(colour.hypertext.server.php.back)"
+            }
+        },
+        "powershell": {
+            "style": {
+                "0": "fore:#000000",
+                "1": "fore:#008000",
+                "2": "fore:#800000",
+                "3": "fore:#800000",
+                "4": "fore:#FF0000",
+                "5": "fore:#800080",
+                "6": "fore:#000000,bold",
+                "7": "$(lexers.powershell.style.0)",
+                "8": "fore:#000080,bold",
+                "9": "fore:#008080,bold",
+                "10": "fore:#008080,italics",
+                "11": "fore:#808000,bold",
+                "13": "$(lexers.powershell.style.1)"
+            }
+        },
+        "props": {
+            "style": {
+                "1": "fore:#007F7F,$(font.comment)",
+                "2": "$(colour.string),back:#E0F0F0,eolfilled",
+                "3": "$(colour.other.operator)",
+                "4": "$(colour.preproc)",
+                "34": "fore:#0000FF,notbold",
+                "35": "fore:#FF0000,notbold"
+            }
+        },
+        "makefile": {
+            "style": {
+                "0": "fore:#000000",
+                "1": "$(colour.other.comment),$(font.code.comment.box)",
+                "2": "$(colour.preproc)",
+                "3": "fore:#000080",
+                "4": "$(colour.other.operator)",
+                "5": "fore:#A00000",
+                "9": "$(colour.error),eolfilled",
+                "34": "fore:#0000FF,notbold",
+                "35": "fore:#FF0000,notbold"
+            }
+        },
+        "python": {
+            "style": {
+                "0": "fore:#808080",
+                "1": "fore:#007F00,$(font.comment)",
+                "2": "fore:#007F7F",
+                "3": "fore:#7F007F,$(font.monospace)",
+                "4": "fore:#7F007F,$(font.monospace)",
+                "5": "fore:#00007F,bold",
+                "6": "fore:#7F0000",
+                "7": "fore:#7F0000",
+                "8": "fore:#0000FF,bold",
+                "9": "fore:#007F7F,bold",
+                "10": "bold",
+                "12": "fore:#7F7F7F",
+                "13": "fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled",
+                "14": "fore:#407090",
+                "15": "fore:#805000",
+                "34": "fore:#0000FF,bold",
+                "35": "fore:#FF0000,bold"
+            }
+        },
+        "sql": {
+            "style": {
+                "0": "fore:#808080",
+                "1": "fore:#007F00,$(font.comment)",
+                "2": "fore:#007F00,$(font.comment)",
+                "3": "fore:#7F7F7F",
+                "4": "fore:#007F7F",
+                "5": "fore:#00007F,bold",
+                "6": "fore:#7F007F,$(font.monospace)",
+                "7": "fore:#7F007F,$(font.monospace)",
+                "8": "$(colour.preproc)",
+                "9": "fore:#007F00,$(font.monospace),back:#E0FFE0,eolfilled",
+                "10": "bold",
+                "12": "fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled",
+                "13": "fore:#007F00,$(font.comment)",
+                "15": "fore:#007F00,$(font.comment)",
+                "16": "fore:#B00040",
+                "17": "fore:#3060A0,$(font.code.comment.doc)",
+                "18": "fore:#804020,$(font.code.comment.doc)",
+                "19": "fore:#4B0082",
+                "20": "fore:#B00040",
+                "21": "fore:#8B0000",
+                "22": "fore:#800080"
+            }
+        },
+        "vb": {
+            "style": {
+                "1": "$(colour.code.comment.line),$(font.code.comment.line)",
+                "2": "$(colour.number)",
+                "3": "$(colour.keyword)",
+                "4": "$(colour.string)",
+                "5": "$(colour.preproc)",
+                "6": "$(colour.operator)",
+                "8": "$(colour.number)",
+                "9": "$(style.stringeol)",
+                "10": "$(lexers.vb.style.5),back:#D0FFD0",
+                "11": "$(lexers.vb.style.5),back:#D0D0FF",
+                "12": "$(lexers.vb.style.5),back:#FFD0D0",
+                "32": "$(font.base)"
+            }
+        },
+        "vbscript": {
+            "style": {
+                "0": "$(lexers.vb.style.0)",
+                "1": "$(lexers.vb.style.1)",
+                "2": "$(lexers.vb.style.2)",
+                "3": "$(lexers.vb.style.3)",
+                "4": "$(lexers.vb.style.4)",
+                "5": "$(lexers.vb.style.5)",
+                "6": "$(lexers.vb.style.6)",
+                "7": "$(lexers.vb.style.7)",
+                "8": "$(lexers.vb.style.8)",
+                "9": "$(lexers.vb.style.9)",
+                "10": "$(lexers.vb.style.10)",
+                "11": "$(lexers.vb.style.11)",
+                "12": "$(lexers.vb.style.12)"
+            }
+        },
+        "xml": {
+            "style": {
+                "0": "fore:#000000,$(font.text)",
+                "1": "fore:#000080",
+                "2": "fore:#000080",
+                "3": "fore:#008080",
+                "4": "fore:#008080",
+                "5": "$(colour.number)",
+                "6": "$(colour.string)",
+                "7": "$(colour.string)",
+                "8": "fore:#800080",
+                "9": "fore:#808000",
+                "10": "fore:#800080,$(font.text)",
+                "11": "fore:#000080",
+                "12": "fore:#800080,bold",
+                "13": "fore:#800080,bold",
+                "17": "fore:#800000,back:#FFF0F0,$(font.text),eolfilled",
+                "18": "fore:#800000",
+                "19": "fore:#608060",
+                "21": "fore:#000080,$(colour.hypertext.sgml.back)",
+                "22": "fore:#000080,$(colour.hypertext.sgml.back),bold",
+                "23": "fore:#006600,$(colour.hypertext.sgml.back)",
+                "24": "fore:#800000,$(colour.hypertext.sgml.back)",
+                "25": "fore:#993300,$(colour.hypertext.sgml.back)",
+                "26": "fore:#800000,back:#FF6666",
+                "27": "fore:#3366FF,$(colour.hypertext.sgml.back)",
+                "28": "fore:#333333,$(colour.hypertext.sgml.back)",
+                "29": "fore:#808000,$(colour.hypertext.sgml.back)",
+                "31": "fore:#000066,back:#CCCCE0"
+            }
+        }
+    },
+    "colour": {
+        "char": "fore:#7F007F",
+        "code": {
+            "comment": {
+                "box": "fore:#007F00",
+                "doc": "fore:#3F703F",
+                "line": "fore:#007F00"
+            }
+        },
+        "embedded": {
+            "js": "back:#F0F0FF"
+        },
+        "error": "fore:#FFFF00,back:#FF0000",
+        "hypertext": {
+            "client": {
+                "python": {
+                    "back": "back:#EFFFEF"
+                },
+                "vbs": {
+                    "back": "back:#EFEFFF"
+                }
+            },
+            "server": {
+                "javascript": {
+                    "back": "back:#DFDF7F"
+                },
+                "php": {
+                    "back": "back:#FFF8F8"
+                },
+                "python": {
+                    "back": "back:#CFEFCF"
+                },
+                "vbs": {
+                    "back": "back:#CFCFEF"
+                }
+            },
+            "sgml": {
+                "back": "back:#EFEFFF"
+            }
+        }
+        "keyword": "fore:#00007F",
+        "notused": "back:#FF0000",
+        "number": "fore:#007F7F",
+        "operator": "fore:#000000",
+        "other": {
+            "comment": "fore:#007F00",
+            "operator": "fore:#B06000"
+        },
+        "preproc": "fore:#7F7F00",
+        "string": "fore:#7F007F",
+    },
+    "font": {
+        "base": "font:Courier New,size:12",
+        "code": {
+            "base": "",
+            "comment": {
+                "box": "$(font.comment)",
+                "doc": "$(font.comment)",
+                "line": "$(font.comment)"
+            }
+        },
+        "comment": "font:Courier New,size:12",
+        "js": "$(font.comment)",
+        "monospace": "font:Courier New,size:12",
+        "notused": "",
+        "text": "font:Courier New,size:12",
+        "text": {
+            "comment": "font:Courier New,size:12"
+        },
+        "vbs": "font:Courier New,size:12"
+    },
+    "fontcolour": {
+        "js": "$(colour.embedded.js),$(font.js)"
+    },
+    "style": {
+        "stringeol": ""
+    }
+}

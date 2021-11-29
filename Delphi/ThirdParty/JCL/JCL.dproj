@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{d6347f24-50b5-40f7-8110-6e526485446f}</ProjectGuid>
+    <MainSource>JCL.dpk</MainSource>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+    <ETS_SubDir>ETS\Dll\Common</ETS_SubDir>
+  </PropertyGroup>
+  <Import Project="..\..\ETS.props" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Delphi.Personality</Borland.Personality>
+    <Borland.ProjectType>Package</Borland.ProjectType>
+    <BorlandProject>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">True</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">False</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">2052</VersionInfo><VersionInfo Name="CodePage">936</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">JCL.dpk</Source></Source></Delphi.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <Import Project="$(SrcDir)\ETS.End.props" />
+  <ItemGroup>
+    <DelphiCompile Include="JCL.dpk">
+      <MainSource>MainSource</MainSource>
+    </DelphiCompile>
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="Jcl8087.pas" />
+    <DCCReference Include="JclAnsiStrings.pas" />
+    <DCCReference Include="JclBase.pas" />
+    <DCCReference Include="JclCharsets.pas" />
+    <DCCReference Include="JclConsole.pas" />
+    <DCCReference Include="JclDateTime.pas" />
+    <DCCReference Include="JclDebug.pas" />
+    <DCCReference Include="JclFileUtils.pas" />
+    <DCCReference Include="JclHookExcept.pas" />
+    <DCCReference Include="JclIniFiles.pas" />
+    <DCCReference Include="JclLogic.pas" />
+    <DCCReference Include="JclMath.pas" />
+    <DCCReference Include="JclPeImage.pas" />
+    <DCCReference Include="JclRegistry.pas" />
+    <DCCReference Include="JclResources.pas" />
+    <DCCReference Include="JclSecurity.pas" />
+    <DCCReference Include="JclShell.pas" />
+    <DCCReference Include="JclStreams.pas" />
+    <DCCReference Include="JclStringConversions.pas" />
+    <DCCReference Include="JclStrings.pas" />
+    <DCCReference Include="JclSynch.pas" />
+    <DCCReference Include="JclSysInfo.pas" />
+    <DCCReference Include="JclSysUtils.pas" />
+    <DCCReference Include="JclTD32.pas" />
+    <DCCReference Include="JclUnicode.pas" />
+    <DCCReference Include="JclWideStrings.pas" />
+    <DCCReference Include="JclWin32.pas" />
+    <DCCReference Include="Snmp.pas" />
+  </ItemGroup>
+</Project>

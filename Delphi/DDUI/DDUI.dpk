@@ -1,0 +1,70 @@
+package DDUI;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  dbrtl;
+
+contains
+  UTool in '..\Comm\UTool.pas',
+  UEncdDecd in '..\ThirdParty\Borland\UEncdDecd.pas',
+  GDIHelper in '..\ThirdParty\GDIPlus\GDIHelper.pas',
+  IGDIPlus in '..\ThirdParty\GDIPlus\IGDIPlus.pas',
+  pcre in '..\ThirdParty\QDAC3\pcre.pas',
+  PerlRegEx in '..\ThirdParty\QDAC3\PerlRegEx.pas',
+  qjson in '..\ThirdParty\QDAC3\qjson.pas',
+  qrbtree in '..\ThirdParty\QDAC3\qrbtree.pas',
+  QSimplePool in '..\ThirdParty\QDAC3\QSimplePool.pas',
+  qstring in '..\ThirdParty\QDAC3\qstring.pas',
+  Scintilla in '..\ThirdParty\Scintilla\Scintilla.pas',
+  ScintillaConst in '..\ThirdParty\Scintilla\ScintillaConst.pas',
+  ScintillaLexerConst in '..\ThirdParty\Scintilla\ScintillaLexerConst.pas',
+  UDUIGrid in 'Control\Grid\UDUIGrid.pas',
+  UDUIGridData in 'Control\Grid\UDUIGridData.pas',
+  UDUIGridEx in 'Control\Grid\UDUIGridEx.pas',
+  UDUIGridHashMap in 'Control\Grid\UDUIGridHashMap.pas',
+  UDUITreeGrid in 'Control\Grid\UDUITreeGrid.pas',
+  UDUIButton in 'Control\UDUIButton.pas',
+  UDUIEdit in 'Control\UDUIEdit.pas',
+  UDUIImage in 'Control\UDUIImage.pas',
+  UDUILabel in 'Control\UDUILabel.pas',
+  UDUIPanel in 'Control\UDUIPanel.pas',
+  UDUIScrollBar in 'Control\UDUIScrollBar.pas',
+  UDUIShape in 'Control\UDUIShape.pas',
+  UDUIWinWrapper in 'Control\UDUIWinWrapper.pas',
+  UDUICoordinateTransform in 'Core\UDUICoordinateTransform.pas',
+  UDUICore in 'Core\UDUICore.pas',
+  UDUIForm in 'Core\UDUIForm.pas',
+  UDUIGraphics in 'Core\UDUIGraphics.pas',
+  UDUIHint in 'Core\UDUIHint.pas',
+  UDUIRcStream in 'Core\UDUIRcStream.pas',
+  UDUIRegComponents in 'Core\UDUIRegComponents.pas',
+  UDUISkin in 'Core\UDUISkin.pas',
+  UDUIUtils in 'Core\UDUIUtils.pas';
+
+end.

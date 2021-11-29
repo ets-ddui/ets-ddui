@@ -1,0 +1,61 @@
+package JCL;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  Jcl8087 in 'Jcl8087.pas',
+  JclAnsiStrings in 'JclAnsiStrings.pas',
+  JclBase in 'JclBase.pas',
+  JclCharsets in 'JclCharsets.pas',
+  JclConsole in 'JclConsole.pas',
+  JclDateTime in 'JclDateTime.pas',
+  JclDebug in 'JclDebug.pas',
+  JclFileUtils in 'JclFileUtils.pas',
+  JclHookExcept in 'JclHookExcept.pas',
+  JclIniFiles in 'JclIniFiles.pas',
+  JclLogic in 'JclLogic.pas',
+  JclMath in 'JclMath.pas',
+  JclPeImage in 'JclPeImage.pas',
+  JclRegistry in 'JclRegistry.pas',
+  JclResources in 'JclResources.pas',
+  JclSecurity in 'JclSecurity.pas',
+  JclShell in 'JclShell.pas',
+  JclStreams in 'JclStreams.pas',
+  JclStringConversions in 'JclStringConversions.pas',
+  JclStrings in 'JclStrings.pas',
+  JclSynch in 'JclSynch.pas',
+  JclSysInfo in 'JclSysInfo.pas',
+  JclSysUtils in 'JclSysUtils.pas',
+  JclTD32 in 'JclTD32.pas',
+  JclUnicode in 'JclUnicode.pas',
+  JclWideStrings in 'JclWideStrings.pas',
+  JclWin32 in 'JclWin32.pas',
+  Snmp in 'Snmp.pas';
+
+end.
