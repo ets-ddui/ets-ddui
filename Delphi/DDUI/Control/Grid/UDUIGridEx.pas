@@ -43,6 +43,8 @@ type
     procedure SetCellWidth(ACol: Integer; const AValue: Integer);
     function GetCellHeight(ARow: Integer): Integer;
     procedure SetCellHeight(ARow: Integer; const AValue: Integer);
+    function GetCol: Integer;
+    function GetRow: Integer;
   protected
     function CalcMovedID(const AIndex: TDUIRowColID;
       ACount: Integer; AMoveModes: TDUIMoveModes): TDUIRowColID; override;
@@ -67,6 +69,8 @@ type
     property Cells[ACol: Integer; ARow: Integer]: String read GetCells write SetCells;
     property CellHeight[ARow: Integer]: Integer read GetCellHeight write SetCellHeight;
     property CellWidth[ACol: Integer]: Integer read GetCellWidth write SetCellWidth;
+    property Row: Integer read GetRow;
+    property Col: Integer read GetCol;
   published
     //ColCount、RowCount必须放在FixedCols、FixedRows的前面
     property ColCount: Longint index rctCol read GetCount write SetCount default 0;
@@ -250,7 +254,7 @@ begin
   begin
     ArcBorder := False;
     WinControl.Visible := True;
-    Text := GetEditText(Col, Row);
+    Text := GetEditText(inherited Col, inherited Row);
   end;
 end;
 
@@ -280,6 +284,26 @@ end;
 function TDUIDrawGrid.GetCells(ACol, ARow: Integer): String;
 begin
   Result := GetEditText(MakeCol(Pointer(ACol)), MakeRow(Pointer(ARow)));
+end;
+
+function TDUIDrawGrid.GetRow: Integer;
+begin
+  if IsFirst(inherited Row) then
+    Result := 0
+  else if IsEof(inherited Row) then
+    Result := -1
+  else
+    Result := Integer(inherited Row.FIndex);
+end;
+
+function TDUIDrawGrid.GetCol: Integer;
+begin
+  if IsFirst(inherited Col) then
+    Result := 0
+  else if IsEof(inherited Col) then
+    Result := -1
+  else
+    Result := Integer(inherited Col.FIndex);
 end;
 
 function TDUIDrawGrid.GetCellHeight(ARow: Integer): Integer;
@@ -368,8 +392,8 @@ begin
     FPropertys[AIndex.FType][Integer(AIndex.FIndex) - 1].FVisible := AValue;
     if not AValue then
     begin
-      if AIndex = IfThen(AIndex.FType = rctCol, Col, Row) then
-        MoveCurrent(Col, Row, False);
+      if AIndex = IfThen(AIndex.FType = rctCol, inherited Col, inherited Row) then
+        MoveCurrent(inherited Col, inherited Row, False);
       if AIndex = GetTopLeft(AIndex.FType) then
         MoveTopLeft(GetTopLeft(rctCol), GetTopLeft(rctRow));
     end;
@@ -399,7 +423,7 @@ begin
 
   if AType = rctCol then
   begin
-    idCurrent := Col;
+    idCurrent := inherited Col;
     if IsEof(idCurrent) then
       idCurrent.FIndex := Pointer(iOldValue);
 
@@ -407,12 +431,12 @@ begin
     if IsEof(idTopLeft) then
       idTopLeft.FIndex := Pointer(iOldValue);
 
-    MoveCurrent(idCurrent, Row, True);
+    MoveCurrent(idCurrent, inherited Row, True);
     MoveTopLeft(idTopLeft, GetTopLeft(rctRow));
   end
   else
   begin
-    idCurrent := Row;
+    idCurrent := inherited Row;
     if IsEof(idCurrent) then
       idCurrent.FIndex := Pointer(iOldValue);
 
@@ -420,7 +444,7 @@ begin
     if IsEof(idTopLeft) then
       idTopLeft.FIndex := Pointer(iOldValue);
 
-    MoveCurrent(Col, idCurrent, True);
+    MoveCurrent(inherited Col, idCurrent, True);
     MoveTopLeft(GetTopLeft(rctCol), idTopLeft);
   end;
 
@@ -442,7 +466,7 @@ begin
 
   FFixedCount[AType] := AValue;
 
-  MoveCurrent(Col, Row, True);
+  MoveCurrent(inherited Col, inherited Row, True);
   MoveTopLeft(GetTopLeft(rctCol), GetTopLeft(rctRow));
   Invalidate;
 end;

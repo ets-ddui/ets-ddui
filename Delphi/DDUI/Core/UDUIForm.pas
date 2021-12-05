@@ -716,9 +716,14 @@ begin
   //而且这些属性都会触发对GetBorderIconStyles的调用，因此，在此函数中修正对应按钮的状态
   inherited GetBorderIconStyles(AStyle, AExStyle);
 
-  FCaption.Visible := AStyle and WS_SYSMENU <> 0;
-  FMinimize.Visible := AStyle and (WS_SYSMENU or WS_MINIMIZEBOX) = (WS_SYSMENU or WS_MINIMIZEBOX);
-  FMaximize.Visible := AStyle and (WS_SYSMENU or WS_MAXIMIZEBOX) = (WS_SYSMENU or WS_MAXIMIZEBOX);
+  if BorderStyle in [bsToolWindow, bsSizeToolWin] then
+    FCaption.Visible := False
+  else
+  begin
+    FCaption.Visible := AStyle and WS_SYSMENU <> 0;
+    FMinimize.Visible := AStyle and (WS_SYSMENU or WS_MINIMIZEBOX) = (WS_SYSMENU or WS_MINIMIZEBOX);
+    FMaximize.Visible := AStyle and (WS_SYSMENU or WS_MAXIMIZEBOX) = (WS_SYSMENU or WS_MAXIMIZEBOX);
+  end
 end;
 
 procedure TDUIForm.SelectNext(AGoForward: Boolean);

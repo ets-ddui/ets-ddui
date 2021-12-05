@@ -22,7 +22,7 @@ implementation
 
 uses
   Classes, UDUIForm, UDUIPanel, UDUIButton, UDUITreeGrid, UDUIImage, UDUIWinWrapper,
-  UDUIEdit, UDUILabel, UDUIScrollBar, UDUIGridEx, UDUIShape, Scintilla;
+  UDUIEdit, UDUILabel, UDUIScrollBar, UDUIGridEx, UDUIShape, UDUIComboBox, Scintilla;
 
 {$IFDEF DESIGNTIME}
 procedure RegComponentsImpl(AClasses: array of TComponentClass);
@@ -41,7 +41,7 @@ procedure RegComponents;
 begin
   RegComponentsImpl([TDUIScrollControl, TDUIWinContainer, TDUIPanel, TDUIImage,
     TDUIButton, TDUISpeedButton, TDUIButtonList, TDUIEdit, TDUILabel, TDUIScrollBar,
-    TDUIDrawGrid, TDUITreeGrid, TDUIShape,
+    TDUIDrawGrid, TDUITreeGrid, TDUIShape, TDUIComboBox,
     TScintilla]);
 end;
 

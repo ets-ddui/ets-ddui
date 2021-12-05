@@ -247,11 +247,15 @@ begin
     begin
       //与Text属性相关的事件，全部转发给TEdit处理
       WinControl.WindowProc(AMessage);
+
+      if AMessage.Msg = WM_SETTEXT then
+        Invalidate;
+
       Exit;
     end;
     WM_KEYDOWN, WM_KEYUP, WM_CHAR:
     begin
-      if AutoHide and (TWMKey(AMessage).CharCode = $D) then
+      if AutoHide and (TWMKey(AMessage).CharCode = VK_RETURN) then
       begin
         WinControl.Visible := False;
         Exit;

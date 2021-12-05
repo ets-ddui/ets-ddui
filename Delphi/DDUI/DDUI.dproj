@@ -45,6 +45,7 @@
     <DCCReference Include="Control\Grid\UDUIGridHashMap.pas" />
     <DCCReference Include="Control\Grid\UDUITreeGrid.pas" />
     <DCCReference Include="Control\UDUIButton.pas" />
+    <DCCReference Include="Control\UDUIComboBox.pas" />
     <DCCReference Include="Control\UDUIEdit.pas" />
     <DCCReference Include="Control\UDUIImage.pas" />
     <DCCReference Include="Control\UDUILabel.pas" />
@@ -57,6 +58,7 @@
     <DCCReference Include="Core\UDUIForm.pas" />
     <DCCReference Include="Core\UDUIGraphics.pas" />
     <DCCReference Include="Core\UDUIHint.pas" />
+    <DCCReference Include="Core\UDUIPopupForm.pas" />
     <DCCReference Include="Core\UDUIRcStream.pas" />
     <DCCReference Include="Core\UDUIRegComponents.pas" />
     <DCCReference Include="Core\UDUISkin.pas" />
