@@ -513,6 +513,7 @@ begin
         else
         begin
           AObject.Free;
+          WriteView('父对象(%s)类型不合法', [AParent.ClassName]);
           Exit;
         end;
       end
@@ -523,22 +524,34 @@ begin
     begin
       nd := AJson.Root.ItemByPath(nd.Value + '.' + AJson.Name);
       if not Assigned(nd) then
+      begin
+        WriteView('无法找到引用类型(%s.%s)', [nd.Value, AJson.Name]);
         Exit;
+      end;
 
       if not JsonToComponent(AObject, nd, AParent) then
         Exit;
     end
     else
+    begin
+      WriteView('无法创建对象实例(%s/%s)', [AJson.Path, AJson.Name]);
       Exit;
+    end;
   end;
 
   if AJson.HasChild('__property__', nd) then
   begin
     if not nd.IsObject then
+    begin
+      WriteView('属性不合法(%s/%s)', [nd.Path, nd.Name]);
       Exit;
+    end;
 
     if not SetProperty(AObject, nd) then
+    begin
+      WriteView('属性初始化失败(%s/%s)', [nd.Path, nd.Name]);
       Exit;
+    end;
   end;
 
   if AJson.HasChild('__custom_property__', nd) then
@@ -559,7 +572,10 @@ begin
   if AJson.HasChild('__child__', nd) then
   begin
     if not nd.IsArray then
+    begin
+      WriteView('子对象不合法(%s/%s)', [nd.Path, nd.Name]);
       Exit;
+    end;
 
     for i := 0 to nd.Count - 1 do
     begin
