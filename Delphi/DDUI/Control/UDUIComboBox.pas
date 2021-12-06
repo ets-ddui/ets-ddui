@@ -31,12 +31,20 @@ type
     procedure DoDropDown(ASender: TObject);
     procedure DoClose(ASender: TObject; var AAction: TCloseAction);
     procedure FormWndProc(var AMessage: TMessage);
+    function GetOnChange: TNotifyEvent;
+    function GetReadOnly: Boolean;
+    procedure SetOnChange(const AValue: TNotifyEvent);
+    procedure SetReadOnly(const AValue: Boolean);
   protected
     procedure WndProc(var AMessage: TMessage); override;
   public
     constructor Create(AOwner: TComponent); override;
     function AddData(AValue: String): Integer;
     procedure Clear;
+  published
+    property ReadOnly: Boolean read GetReadOnly write SetReadOnly default False;
+    property Text;
+    property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
   end;
 
 implementation
@@ -168,6 +176,27 @@ begin
   end;
 
   inherited;
+end;
+
+function TDUIComboBox.GetOnChange: TNotifyEvent;
+begin
+  Result := FEdit.OnChange;
+end;
+
+procedure TDUIComboBox.SetOnChange(const AValue: TNotifyEvent);
+begin
+  FEdit.OnChange := AValue;
+end;
+
+function TDUIComboBox.GetReadOnly: Boolean;
+begin
+  Result := FEdit.ReadOnly;
+end;
+
+procedure TDUIComboBox.SetReadOnly(const AValue: Boolean);
+begin
+  FEdit.ReadOnly := AValue;
+  FButton.Enabled := not AValue;
 end;
 
 end.
