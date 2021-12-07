@@ -28,13 +28,16 @@ type
     FDropDownForm: TDUIPopupForm;
     FDropDownGrid: TDUIDrawGrid;
     FOldFormWndProc: TWndMethod;
+    FOnChange: TNotifyEvent;
+    procedure DoChange(ASender: TObject);
     procedure DoDropDown(ASender: TObject);
     procedure DoClose(ASender: TObject; var AAction: TCloseAction);
     procedure FormWndProc(var AMessage: TMessage);
-    function GetOnChange: TNotifyEvent;
+    function GetItemCount: Integer;
     function GetReadOnly: Boolean;
-    procedure SetOnChange(const AValue: TNotifyEvent);
     procedure SetReadOnly(const AValue: Boolean);
+    function GetItemIndex: Integer;
+    procedure SetItemIndex(const AValue: Integer);
   protected
     procedure WndProc(var AMessage: TMessage); override;
   public
@@ -42,9 +45,14 @@ type
     function AddData(AValue: String): Integer;
     procedure Clear;
   published
+    property Enabled;
+    property Height default 25;
+    property Width default 120;
+    property ItemCount: Integer read GetItemCount;
+    property ItemIndex: Integer read GetItemIndex write SetItemIndex;
     property ReadOnly: Boolean read GetReadOnly write SetReadOnly default False;
     property Text;
-    property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 implementation
@@ -58,12 +66,14 @@ constructor TDUIComboBox.Create(AOwner: TComponent);
 begin
   inherited;
 
-  SetBounds(0, 0, 121, 25);
+  SetBounds(0, 0, 120, 25);
+  ControlStyle := ControlStyle - [csSetCaption];
 
   FEdit := TDUIEdit.Create(Self);
   FEdit.DUIParent := Self;
   FEdit.ArcBorder := False;
   FEdit.Align := alClient;
+  FEdit.OnChange := DoChange;
 
   FButton := TDUIButton.Create(Self);
   FButton.DUIParent := FEdit;
@@ -90,6 +100,12 @@ end;
 procedure TDUIComboBox.Clear;
 begin
   FDropDownGrid.RowCount := 0;
+end;
+
+procedure TDUIComboBox.DoChange(ASender: TObject);
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TDUIComboBox.DoClose(ASender: TObject; var AAction: TCloseAction);
@@ -178,14 +194,45 @@ begin
   inherited;
 end;
 
-function TDUIComboBox.GetOnChange: TNotifyEvent;
+function TDUIComboBox.GetItemCount: Integer;
 begin
-  Result := FEdit.OnChange;
+  Result := FDropDownGrid.RowCount;
 end;
 
-procedure TDUIComboBox.SetOnChange(const AValue: TNotifyEvent);
+function TDUIComboBox.GetItemIndex: Integer;
+var
+  sText: String;
 begin
-  FEdit.OnChange := AValue;
+  sText := Text;
+
+  Result := FDropDownGrid.Row;
+  if FDropDownGrid.Cells[1, Result] = sText then
+    Exit;
+  
+  for Result := 1 to FDropDownGrid.RowCount do
+    if FDropDownGrid.Cells[1, Result] = sText then
+    begin
+      FDropDownGrid.Row := Result;
+      Exit;
+    end;
+
+  Result := -1;
+end;
+
+procedure TDUIComboBox.SetItemIndex(const AValue: Integer);
+begin
+  if GetItemIndex = AValue then
+    Exit;
+
+  FDropDownGrid.Row := AValue;
+
+  if Text <> FDropDownGrid.Cells[1, AValue] then
+  begin
+    Text := FDropDownGrid.Cells[1, AValue]; //会触发DoChange事件
+    Exit;
+  end;
+
+  DoChange(Self);
 end;
 
 function TDUIComboBox.GetReadOnly: Boolean;

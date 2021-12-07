@@ -44,7 +44,9 @@ type
     function GetCellHeight(ARow: Integer): Integer;
     procedure SetCellHeight(ARow: Integer; const AValue: Integer);
     function GetCol: Integer;
+    procedure SetCol(const AValue: Integer);
     function GetRow: Integer;
+    procedure SetRow(const AValue: Integer);
   protected
     function CalcMovedID(const AIndex: TDUIRowColID;
       ACount: Integer; AMoveModes: TDUIMoveModes): TDUIRowColID; override;
@@ -69,8 +71,8 @@ type
     property Cells[ACol: Integer; ARow: Integer]: String read GetCells write SetCells;
     property CellHeight[ARow: Integer]: Integer read GetCellHeight write SetCellHeight;
     property CellWidth[ACol: Integer]: Integer read GetCellWidth write SetCellWidth;
-    property Row: Integer read GetRow;
-    property Col: Integer read GetCol;
+    property Row: Integer read GetRow write SetRow;
+    property Col: Integer read GetCol write SetCol;
   published
     //ColCount、RowCount必须放在FixedCols、FixedRows的前面
     property ColCount: Longint index rctCol read GetCount write SetCount default 0;
@@ -286,6 +288,21 @@ begin
   Result := GetEditText(MakeCol(Pointer(ACol)), MakeRow(Pointer(ARow)));
 end;
 
+function TDUIDrawGrid.GetCol: Integer;
+begin
+  if IsFirst(inherited Col) then
+    Result := 0
+  else if IsEof(inherited Col) then
+    Result := -1
+  else
+    Result := Integer(inherited Col.FIndex);
+end;
+
+procedure TDUIDrawGrid.SetCol(const AValue: Integer);
+begin
+  MoveCurrent(MakeCol(Pointer(AValue)), inherited Row, True);
+end;
+
 function TDUIDrawGrid.GetRow: Integer;
 begin
   if IsFirst(inherited Row) then
@@ -296,14 +313,9 @@ begin
     Result := Integer(inherited Row.FIndex);
 end;
 
-function TDUIDrawGrid.GetCol: Integer;
+procedure TDUIDrawGrid.SetRow(const AValue: Integer);
 begin
-  if IsFirst(inherited Col) then
-    Result := 0
-  else if IsEof(inherited Col) then
-    Result := -1
-  else
-    Result := Integer(inherited Col.FIndex);
+  MoveCurrent(inherited Col, MakeRow(Pointer(AValue)), True);
 end;
 
 function TDUIDrawGrid.GetCellHeight(ARow: Integer): Integer;
