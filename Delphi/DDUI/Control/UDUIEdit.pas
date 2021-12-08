@@ -243,7 +243,7 @@ var
   ptLeftTop: TPoint;
 begin
   case AMessage.Msg of
-    WM_GETTEXTLENGTH, WM_GETTEXT, WM_SETTEXT:
+    WM_GETTEXTLENGTH, WM_GETTEXT, WM_SETTEXT, CM_TEXTCHANGED: //TEdit通过处理CM_TEXTCHANGED才能触发OnChange事件
     begin
       //与Text属性相关的事件，全部转发给TEdit处理
       WinControl.WindowProc(AMessage);

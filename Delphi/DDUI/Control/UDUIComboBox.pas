@@ -183,7 +183,7 @@ end;
 procedure TDUIComboBox.WndProc(var AMessage: TMessage);
 begin
   case AMessage.Msg of
-    WM_GETTEXTLENGTH, WM_GETTEXT, WM_SETTEXT:
+    WM_GETTEXTLENGTH, WM_GETTEXT, WM_SETTEXT, CM_TEXTCHANGED:
     begin
       //与Text属性相关的事件，全部转发给FEdit处理
       FEdit.WindowProc(AMessage);
