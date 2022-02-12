@@ -72,7 +72,7 @@ type
   TDUITreeNodeClass = class of TDUITreeNode;
   TDUITreeNode = class
   private
-    //叶子节点、节点链表的尾节点都会存在一些空指针，重复利用这些指针存在一些特殊信息：
+    //叶子节点、节点链表的尾节点都会存在一些空指针，重复利用这些指针存放一些特殊信息：
     //叶子节点：FLast属性存放父节点指针(FFirst为nil即为叶子节点)
     //节点链表尾节点：存放祖父节点(可通过读取最后一个子节点的FLast属性，获取父节点指针)
     FPrior, FNext, FFirst, FLast: TDUITreeNode;
@@ -83,6 +83,8 @@ type
     function GetLevel: Integer;
     function GetParent: TDUITreeNode;
     procedure SetCaption(const AValue: String);
+    function GetCells(AColIndex: Integer): String;
+    procedure SetCells(AColIndex: Integer; const AValue: String);
     function GetCollapsed: Boolean;
     procedure SetCollapsed(const AValue: Boolean);
     function GetHeight: Integer;
@@ -109,6 +111,7 @@ type
     procedure Clear;
     function Move(ADistinct: Integer): TDUITreeNode;
     property Caption: String read FCaption write SetCaption;
+    property Cells[AColIndex: Integer]: String read GetCells write SetCells;
     property ChildCount: Integer read GetChildCount;
     property Childs[AIndex: Integer]: TDUITreeNode read GetChilds; default;
     //True表示折叠，False表示展开
@@ -133,6 +136,7 @@ type
     FPaintControls: TControlsList;
     FOnGetPaintControls: TOnGetPaintControls;
     FOnSelectCell: TOnSelectCell;
+    FOnSelectCellDouble: TOnSelectCell;
     procedure ButtonMouseDown(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
     //CalcDiagonalNode - 计算右下角的节点ID
@@ -187,6 +191,7 @@ type
     property TitleWidth;
     property OnGetPaintControls: TOnGetPaintControls read FOnGetPaintControls write FOnGetPaintControls;
     property OnSelectCell: TOnSelectCell read FOnSelectCell write FOnSelectCell;
+    property OnSelectCellDouble: TOnSelectCell read FOnSelectCellDouble write FOnSelectCellDouble;
   end;
 
 implementation
@@ -743,6 +748,30 @@ begin
   Changed(Self);
 end;
 
+function TDUITreeNode.GetCells(AColIndex: Integer): String;
+var
+  tg: TDUITreeGrid;
+begin
+  Result := '';
+
+  tg := GetGrid;
+  if not Assigned(tg) then
+    Exit;
+
+  Result := tg.Cells[tg.Columns[AColIndex], Self];
+end;
+
+procedure TDUITreeNode.SetCells(AColIndex: Integer; const AValue: String);
+var
+  tg: TDUITreeGrid;
+begin
+  tg := GetGrid;
+  if not Assigned(tg) then
+    Exit;
+
+  tg.Cells[tg.Columns[AColIndex], Self] := AValue;
+end;
+
 function TDUITreeNode.GetChildCount: Integer;
 begin
   if IsLeaf then
@@ -827,6 +856,9 @@ begin
 
   with GetData(True) do
   begin
+    if FOwned and Assigned(FObject) then
+      FObject.Free;
+
     FOwned := True;
     FObject := AValue;
   end;
@@ -1246,15 +1278,21 @@ procedure TDUITreeGrid.MouseDown(AButton: TMouseButton; AShift: TShiftState; AX,
 var
   gcCurr: TDUIGridCoord;
   pt: TPoint;
+  sc: TOnSelectCell;
 begin
-  if Assigned(FOnSelectCell) then
+  if ssDouble in AShift then
+    sc := FOnSelectCellDouble
+  else
+    sc := FOnSelectCell;
+
+  if Assigned(sc) then
   begin
     gcCurr := PointToCoord(Point(AX, AY));
     if not IsFirst(gcCurr.FRow) and not IsEof(gcCurr.FRow)
       and not IsFirst(gcCurr.FCol) and not IsEof(gcCurr.FCol) then
     begin
       pt := CoordBeginPoint(gcCurr);
-      FOnSelectCell(Self, gcCurr.FCol, gcCurr.FRow, AX - pt.X, AY - pt.Y);
+      sc(Self, gcCurr.FCol, gcCurr.FRow, AX - pt.X, AY - pt.Y);
     end;
   end;
 
