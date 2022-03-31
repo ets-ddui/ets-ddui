@@ -110,7 +110,6 @@ type
   end;
   TRtti = class
   private
-    class function GetVmt(AObject: TObject): PVmt;
     class procedure DoPrint(AValue: String);
     class procedure PrintTitle(var AConfigure: TConfigure; ATitle: String; AParams: array of const);
     class procedure PrintContent(var AConfigure: TConfigure; AContent: String; AParams: array of const);
@@ -125,6 +124,7 @@ type
     class procedure PrintReturnInfo(var AConfigure: TConfigure; AReturnInfo: PReturnInfo);
     class procedure PrintParamInfo(var AConfigure: TConfigure; AParamInfo: PParamInfo);
   public
+    class function GetVmt(AObject: TObject): PVmt;
     class procedure PrintRtti(AObject: TObject; AConfigure: TConfigure = nil);
   end;
 
