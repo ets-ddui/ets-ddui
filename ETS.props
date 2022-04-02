@@ -8,32 +8,54 @@
     <DCC_AssertionsAtRuntime>False</DCC_AssertionsAtRuntime>
   </PropertyGroup>
   <Choose>
-    <When Condition="exists('$(MSBuildProjectDirectory)\..\Delphi')">
+    <!-- DDUI目录查找 -->
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\ETS.props')">
       <PropertyGroup>
-        <SrcDir>$(MSBuildProjectDirectory)</SrcDir>
+        <PropDir>$(MSBuildProjectDirectory)\..</PropDir>
       </PropertyGroup>
     </When>
-    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\Delphi')">
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\ETS.props')">
       <PropertyGroup>
-        <SrcDir>$(MSBuildProjectDirectory)\..</SrcDir>
+        <PropDir>$(MSBuildProjectDirectory)\..\..</PropDir>
       </PropertyGroup>
     </When>
-    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\Delphi')">
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\ETS.props')">
       <PropertyGroup>
-        <SrcDir>$(MSBuildProjectDirectory)\..\..</SrcDir>
+        <PropDir>$(MSBuildProjectDirectory)\..\..\..</PropDir>
       </PropertyGroup>
     </When>
-    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\..\Delphi')">
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\..\ETS.props')">
       <PropertyGroup>
-        <SrcDir>$(MSBuildProjectDirectory)\..\..\..</SrcDir>
+        <PropDir>$(MSBuildProjectDirectory)\..\..\..\..</PropDir>
+      </PropertyGroup>
+    </When>
+    <!-- ETS目录查找 -->
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\DDUI\ETS.props')">
+      <PropertyGroup>
+        <PropDir>$(MSBuildProjectDirectory)\..\DDUI</PropDir>
+      </PropertyGroup>
+    </When>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\DDUI\ETS.props')">
+      <PropertyGroup>
+        <PropDir>$(MSBuildProjectDirectory)\..\..\DDUI</PropDir>
+      </PropertyGroup>
+    </When>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\DDUI\ETS.props')">
+      <PropertyGroup>
+        <PropDir>$(MSBuildProjectDirectory)\..\..\..\DDUI</PropDir>
+      </PropertyGroup>
+    </When>
+    <When Condition="exists('$(MSBuildProjectDirectory)\..\..\..\..\DDUI\ETS.props')">
+      <PropertyGroup>
+        <PropDir>$(MSBuildProjectDirectory)\..\..\..\..\DDUI</PropDir>
       </PropertyGroup>
     </When>
   </Choose>
   <PropertyGroup Condition="'$(BinDir)'==''">
-    <BinDir>$(SrcDir)\$(Configuration)</BinDir>
+    <BinDir>$(PropDir)\..\Out\$(Configuration)</BinDir>
   </PropertyGroup>
   <PropertyGroup>
-    <SrcDir Condition="'$(SrcDir)'!='' And !HasTrailingSlash('$(SrcDir)')">$(SrcDir)\</SrcDir>
+    <PropDir Condition="'$(PropDir)'!='' And !HasTrailingSlash('$(PropDir)')">$(PropDir)\</PropDir>
     <BinDir Condition="'$(BinDir)'!='' And !HasTrailingSlash('$(BinDir)')">$(BinDir)\</BinDir>
   </PropertyGroup>
   <ItemGroup>

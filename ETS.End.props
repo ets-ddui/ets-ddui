@@ -76,7 +76,7 @@
       Condition="(('%(EXTENSION)'=='.dpk' Or '%(EXTENSION)'=='.dpkw') And '$(DCC_DcuOutput)'!='')">
       <Output TaskParameter="Include" ItemName="__OutputFiles" />
     </CreateItem>
-    <CreateItem Include="@(_ETS_SearchPath->'$(SrcDir)%(Identity)')"
+    <CreateItem Include="@(_ETS_SearchPath->'$(PropDir)%(Identity)')"
       Condition="'$(ETS_SearchPath)'!=''">
       <Output TaskParameter="Include" ItemName="__ETS_SearchPath" />
     </CreateItem>
