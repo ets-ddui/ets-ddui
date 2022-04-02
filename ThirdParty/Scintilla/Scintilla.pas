@@ -32,68 +32,118 @@ type
     lagPerl, lagPhp, lagPowerShell, lagProperties, lagMakefile,
     lagPython, lagSql, lagVb, lagVBScript, lagHtml, lagXml);
 
-  FUchardetEntry = function (AValue: PAnsiChar; ALen: Integer): Integer; stdcall;
+  TUchardetEntry = function (AValue: PAnsiChar; ALen: Integer): Integer; stdcall;
+
+  TScintilla = class;
+
+  TScintillaItemBase = class(TPersistent)
+  strict private
+    FOwner: TScintilla;
+  protected
+    function HandleAllocated: Boolean;
+    function Perform(AMessage: Cardinal; AWParam: Longint = 0; ALParam: Longint = 0): Longint;
+    property Owner: TScintilla read FOwner;
+  public
+    constructor Create(AOwner: TScintilla); reintroduce; virtual;
+    procedure Backup; virtual; abstract; //窗口销毁前，将窗口句柄中的值回写到成员变量中
+    procedure Update; virtual; abstract; //窗口创建后，将成员变量中的值设到窗口句柄中
+  end;
+
+  TItemType = (itText, itView);
+  TScintillaItems = array[TItemType] of TScintillaItemBase;
+
+  TScintillaText = class(TScintillaItemBase)
+  private
+    FCodePage: Word;
+    FReadOnly: Boolean;
+    FUseTab: Boolean;
+    FValue: String;
+    procedure SetCodePage(const AValue: Word);
+    procedure SetReadOnly(const AValue: Boolean);
+    function GetValue: String;
+    procedure SetUseTab(const AValue: Boolean);
+    procedure SetValue(const AValue: String);
+  protected
+    procedure AssignTo(ADest: TPersistent); override;
+  public
+    constructor Create(AOwner: TScintilla); override;
+    procedure Backup; override;
+    procedure Update; override;
+    procedure LoadFromFile(const AFileName: String);
+    procedure LoadFromStream(AStream: TStream);
+  published
+    property CodePage: Word read FCodePage write SetCodePage default 0;
+    property ReadOnly: Boolean read FReadOnly write SetReadOnly default False;
+    property UseTab: Boolean read FUseTab write SetUseTab default True;
+    property Value: String read GetValue write SetValue;
+  end;
+
+  TScintillaView = class(TScintillaItemBase)
+  private
+    FFoldIndicator: Boolean;
+    FLanguage: TLanguage;
+    FShowLineNumber: Boolean;
+    FShowWhiteSpace: Boolean;
+    FStyleFile: String;
+    FTabSize: Integer;
+    FWrap: TWrapStyle;
+    procedure ApplyStyle;
+    procedure SetLanguageByExt(AExt: String);
+    procedure SetFoldIndicator(const AValue: Boolean);
+    procedure SetLanguage(const AValue: TLanguage);
+    procedure SetShowLineNumber(const AValue: Boolean);
+    procedure SetShowWhiteSpace(const AValue: Boolean);
+    procedure SetStyleFile(const AValue: String);
+    procedure SetTabSize(const AValue: Integer);
+    procedure SetWrap(const AValue: TWrapStyle);
+  protected
+    procedure AssignTo(ADest: TPersistent); override;
+  public
+    constructor Create(AOwner: TScintilla); override;
+    procedure Backup; override;
+    procedure Update; override;
+  published
+    property FoldIndicator: Boolean read FFoldIndicator write SetFoldIndicator default False;
+    property Language: TLanguage read FLanguage write SetLanguage default lagNone;
+    property ShowLineNumber: Boolean read FShowLineNumber write SetShowLineNumber default False;
+    property ShowWhiteSpace: Boolean read FShowWhiteSpace write SetShowWhiteSpace default False;
+    property StyleFile: String read FStyleFile write SetStyleFile;
+    property TabSize: Integer read FTabSize write SetTabSize default 8;
+    {TODO: 启用换行后，均会导致中文乱码}
+    property Wrap: TWrapStyle read FWrap write SetWrap default wsNone;
+  end;
 
   TScintilla = class(TWinControl)
   private
     class var FScintillaModule: THandle;
     class var FUchardetModule: THandle;
-    class var FUchardetEntry: FUchardetEntry;
+    class var FUchardetEntry: TUchardetEntry;
     class var FStyleFileList: TStringList;
     class procedure Init;
     class procedure UnInit;
     class function GetStyle(AStyleName: String): TQJson;
   private
-    FStyleFile: String;
-    FShowLineNumber: Boolean;
-    FCodePage: Word;
-    FLanguage: TLanguage;
-    FWrap: TWrapStyle;
-    FText: String;
-    FReadOnly: Boolean;
-    FFoldIndicator: Boolean;
-    FTabSize: Integer;
-    FUseTab: Boolean;
-    FShowWhiteSpace: Boolean;
+    FItems: TScintillaItems;
     procedure WMGetDlgCode(var AMessage: TWMGetDlgCode); message WM_GETDLGCODE;
     procedure WMPaint(var AMessage: TWMPaint); message WM_PAINT;
-    procedure ApplyStyle;
-    procedure SetCodePage(const AValue: Word);
-    procedure SetReadOnly(const AValue: Boolean);
-    procedure SetShowLineNumber(const AValue: Boolean);
-    procedure SetWrap(const AValue: TWrapStyle);
-    procedure SetLanguage(const AValue: TLanguage);
-    procedure SetStyleFile(const AValue: String);
-    function GetText: String;
-    procedure SetText(const AValue: String);
-    procedure SetFoldIndicator(const AValue: Boolean);
-    procedure SetTabSize(const AValue: Integer);
-    procedure SetUseTab(const AValue: Boolean);
-    procedure SetShowWhiteSpace(const AValue: Boolean);
+    function GetText: TScintillaText;
+    procedure SetText(const AValue: TScintillaText);
+    function GetView: TScintillaView;
+    procedure SetView(const AValue: TScintillaView);
   protected
     procedure CreateParams(var AParams: TCreateParams); override;
     procedure CreateWnd; override;
     procedure DestroyWnd; override;
     function DefaultPerform(AMessage: Cardinal; AWParam: Longint = 0; ALParam: Longint = 0): Longint;
+    procedure InitItems(var AItems: TScintillaItems); virtual;
   public
     constructor Create(AOwner: TComponent); override;
-    procedure LoadFromFile(const AFileName: String);
-    procedure LoadFromStream(AStream: TStream);
+    destructor Destroy; override;
   published
     property Align;
     property Anchors;
-    property CodePage: Word read FCodePage write SetCodePage default 0;
-    property FoldIndicator: Boolean read FFoldIndicator write SetFoldIndicator default False;
-    property Language: TLanguage read FLanguage write SetLanguage default lagNone;
-    property ReadOnly: Boolean read FReadOnly write SetReadOnly default False;
-    property ShowLineNumber: Boolean read FShowLineNumber write SetShowLineNumber default False;
-    property ShowWhiteSpace: Boolean read FShowWhiteSpace write SetShowWhiteSpace default False;
-    property StyleFile: String read FStyleFile write SetStyleFile;
-    property TabSize: Integer read FTabSize write SetTabSize default 8;
-    property Text: String read GetText write SetText;
-    property UseTab: Boolean read FUseTab write SetUseTab default True;
-    {TODO: 启用换行后，均会导致中文乱码}
-    property Wrap: TWrapStyle read FWrap write SetWrap default wsNone;
+    property Text: TScintillaText read GetText write SetText;
+    property View: TScintillaView read GetView write SetView;
   end;
 
 implementation
@@ -128,252 +178,73 @@ begin
   Result := inherited Add(sValue);
 end;
 
-{ TScintilla }
+{ TScintillaItemBase }
 
-function GetJsonPath(AJson: TQJson; APath: String): String;
-var
-  sTemp: String;
-  iBegin, iEnd: Integer;
+constructor TScintillaItemBase.Create(AOwner: TScintilla);
 begin
-  Result := '';
+  inherited Create;
 
-  iBegin := 1;
-  sTemp := AJson.ValueByPath(APath, '');
-  while True do
-  begin
-    iEnd := PosEx('$(', sTemp, iBegin);
-    if iEnd = 0 then
-    begin
-      if iBegin = 1 then
-        Result := sTemp
-      else
-        Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 1);
-
-      Exit;
-    end;
-    Result := Result + MidStr(sTemp, iBegin, iEnd - iBegin);
-
-    iBegin := iEnd + 2;
-    iEnd := PosEx(')', sTemp, iBegin);
-    if iEnd = 0 then
-    begin
-      Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 3);
-      Exit;
-    end;
-
-    Result := Result + GetJsonPath(AJson, MidStr(sTemp, iBegin, iEnd - iBegin));
-    iBegin := iEnd + 1;
-  end;
+  FOwner := AOwner;
 end;
 
-procedure TScintilla.ApplyStyle;
-  function toColor(AValue: String): Integer;
-  begin
-    if AValue[1] = '#' then
-      AValue[1] := '$';
-    Result := StringToColor(AValue);
-  end;
-  procedure setStyle(AStyle: Integer; AName, AValue: String); overload;
-  begin
-    if 0 = CompareText(AName, 'italics') then
-      DefaultPerform(SCI_STYLESETITALIC, AStyle, StrToIntDef(AValue, 1))
-    else if 0 = CompareText(AName, 'bold') then
-    begin
-      if (AValue = '0') then
-        DefaultPerform(SCI_STYLESETWEIGHT, AStyle, SC_WEIGHT_NORMAL)
-      else
-        DefaultPerform(SCI_STYLESETWEIGHT, AStyle, SC_WEIGHT_BOLD);
-    end
-    else if 0 = CompareText(AName, 'weight') then
-      DefaultPerform(SCI_STYLESETWEIGHT, AStyle, StrToIntDef(AValue, 0))
-    else if 0 = CompareText(AName, 'font') then
-      DefaultPerform(SCI_STYLESETFONT, AStyle, Integer(@AValue[1]))
-    else if 0 = CompareText(AName, 'fore') then
-      DefaultPerform(SCI_STYLESETFORE, AStyle, toColor(AValue))
-    else if 0 = CompareText(AName, 'back') then
-      DefaultPerform(SCI_STYLESETBACK, AStyle, toColor(AValue))
-    else if 0 = CompareText(AName, 'size') then
-      DefaultPerform(SCI_STYLESETSIZEFRACTIONAL, AStyle, Trunc(StrToFloatDef(AValue, 0) * SC_FONT_SIZE_MULTIPLIER))
-    else if 0 = CompareText(AName, 'eolfilled') then
-      DefaultPerform(SCI_STYLESETEOLFILLED, AStyle, StrToIntDef(AValue, 1))
-    else if 0 = CompareText(AName, 'underlined') then
-      DefaultPerform(SCI_STYLESETUNDERLINE, AStyle, StrToIntDef(AValue, 1))
-    else if 0 = CompareText(AName, 'case') then
-    begin
-      if AValue = 'u' then
-        DefaultPerform(SCI_STYLESETCASE, AStyle, SC_CASE_UPPER)
-      else if AValue = 'l' then
-        DefaultPerform(SCI_STYLESETCASE, AStyle, SC_CASE_LOWER)
-      else
-        DefaultPerform(SCI_STYLESETCASE, AStyle, SC_CASE_MIXED);
-    end
-    else if 0 = CompareText(AName, 'visible') then
-      DefaultPerform(SCI_STYLESETVISIBLE, AStyle, StrToIntDef(AValue, 1))
-    else if 0 = CompareText(AName, 'changeable') then
-      DefaultPerform(SCI_STYLESETCHANGEABLE, AStyle, StrToIntDef(AValue, 1))
-    else if (AName <> '') or (AValue <> '') then
-      raise Exception.Create(Format('无法识别的样式(%d, %s, %s)', [AStyle, AName, AValue]));
-  end;
-  procedure setStyle(AStyle: Integer; ALanguage: TLanguage; AJson: TQJson); overload;
-  var
-    i: Integer;
-    sLexer: String;
-  begin
-    if ALanguage = lagNone then
-      sLexer := '*'
-    else
-      sLexer := GetJsonPath(AJson, Format('languages.%s.lexer', [CLanguage[ALanguage]]));
-
-    with TScintillaStringList.Create do
-      try
-        StrictDelimiter := True;
-        NameValueSeparator := ':';
-        Delimiter := ',';
-        DelimitedText := GetJsonPath(AJson, Format('lexers.%s.style.%d', [sLexer, AStyle]));
-        for i := 0 to Count - 1 do
-          setStyle(AStyle, Names[i], ValueFromIndex[i]);
-        if Count > 0 then
-          DefaultPerform(SCI_STYLESETCHARACTERSET, AStyle, SC_CHARSET_DEFAULT);
-      finally
-        Free;
-      end;
-  end;
-var
-  json: TQJson;
-  iStyle, iMaxStyle: Integer;
+function TScintillaItemBase.HandleAllocated: Boolean;
 begin
-  json := GetStyle(FStyleFile);
-  if not Assigned(json) then
-    Exit;
-
-  //SCI_STYLERESETDEFAULT是将默认样式改为初始值(即修改的STYLE_DEFAULT的值，只不过各要素的值在代码中写死了，来源为)
-  //SCI_STYLECLEARALL是将STYLE_DEFAULT的值，覆盖到其他样式中
-  //所以，这里的逻辑要先设置STYLE_DEFAULT的样式，然后，调用SCI_STYLECLEARALL将其他样式初始化为默认值，再有针对的设置特定样式的值
-  setStyle(STYLE_DEFAULT, lagNone, json);
-  //DefaultPerform(SCI_STYLERESETDEFAULT);
-  DefaultPerform(SCI_STYLECLEARALL);
-
-  for iStyle := 0 to STYLE_DEFAULT - 1 do
-    setStyle(iStyle, lagNone, json);
-
-  iMaxStyle := (1 shl DefaultPerform(SCI_GETSTYLEBITS)) - 1;
-  for iStyle := STYLE_DEFAULT + 1 to iMaxStyle do
-    setStyle(iStyle, lagNone, json);
-
-  if FLanguage <> lagNone then
-  begin
-    setStyle(STYLE_DEFAULT, FLanguage, json);
-    DefaultPerform(SCI_STYLECLEARALL);
-
-    for iStyle := 0 to STYLE_DEFAULT - 1 do
-      setStyle(iStyle, FLanguage, json);
-
-    for iStyle := STYLE_DEFAULT + 1 to iMaxStyle do
-      setStyle(iStyle, FLanguage, json);
-  end;
-
-  Invalidate;
+  Result := FOwner.HandleAllocated;
 end;
 
-constructor TScintilla.Create(AOwner: TComponent);
+function TScintillaItemBase.Perform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
+begin
+  Result := FOwner.DefaultPerform(AMessage, AWParam, ALParam);
+end;
+
+{ TScintillaText }
+
+constructor TScintillaText.Create(AOwner: TScintilla);
 begin
   inherited;
 
-  FStyleFile := CDefaultStyle;
-  FTabSize := 8;
   FUseTab := True;
 end;
 
-procedure TScintilla.CreateParams(var AParams: TCreateParams);
+procedure TScintillaText.Backup;
 begin
-  inherited CreateParams(AParams);
-
-  if FScintillaModule <> 0 then
-  begin
-    AParams.WindowClass.hInstance := FScintillaModule;
-    CreateSubClass(AParams, 'Scintilla');
-  end;
+  //读取文本的操作均以Scintilla中记录的为准，只有当窗口未创建时，才会读取FValue的值，
+  //因此，当窗口释放时，需同步最新的值到FValue中，保证在窗口重新创建时，FValue的值可以正确初始化
+  FValue := GetValue;
 end;
 
-procedure TScintilla.CreateWnd;
+procedure TScintillaText.Update;
 begin
-  inherited;
-
-  //DefaultPerform(SCI_SETBUFFEREDDRAW, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
-
   SetCodePage(FCodePage);
-  SetLanguage(FLanguage);
-  //SetFoldIndicator(FFoldIndicator); //移到SetLanguage中调用
-  SetShowLineNumber(FShowLineNumber);
-  SetShowWhiteSpace(FShowWhiteSpace);
-  SetTabSize(FTabSize);
-  SetText(FText);
-  SetUseTab(FUseTab);
   SetReadOnly(FReadOnly); //必须在SetText之后调用(Scintilla在ReadOnly为True时，不允许设置值)
-  SetWrap(FWrap);
+  SetUseTab(FUseTab);
+  SetValue(FValue);
 end;
 
-function TScintilla.DefaultPerform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
-var
-  msg: TMessage;
+procedure TScintillaText.AssignTo(ADest: TPersistent);
 begin
-  HandleNeeded;
-
-  msg.Msg := AMessage;
-  msg.WParam := AWParam;
-  msg.LParam := ALParam;
-  msg.Result := 0;
-  if Assigned(Self) then
-    DefaultHandler(msg);
-
-  Result := msg.Result;
-end;
-
-procedure TScintilla.DestroyWnd;
-begin
-  //读取文本的操作均以Scintilla中记录的为准，只有当窗口未创建时，才会读取FText的值，
-  //因此，当窗口释放时，需同步最新的值到FText中，保证在窗口重新创建时，FText的值可以正确初始化
-  FText := GetText;
-
-  inherited;
-end;
-
-procedure TScintilla.LoadFromFile(const AFileName: String);
-  function calcLanguage(AExt: String): TLanguage;
-  var
-    iLanguage, iExt: Integer;
-    json, jsonLanguage, jsonExt: TQJson;
+  if not Assigned(ADest) or not (ADest is TScintillaText) then
   begin
-    Result := lagNone;
-
-    json := GetStyle(FStyleFile);
-    if not Assigned(json) then
-      Exit;
-
-    json := json.ItemByName('languages');
-    for iLanguage := 0 to json.Count - 1 do
-    begin
-      jsonLanguage := json[iLanguage];
-      jsonExt := jsonLanguage.ItemByName('file_extension');
-      for iExt := 0 to jsonExt.Count - 1 do
-        if CompareText(AExt, jsonExt[iExt].Value) = 0 then
-        begin
-          for Result := Low(TLanguage) to High(TLanguage) do
-            if CompareText(jsonLanguage.Name, CLanguage[Result]) = 0 then
-              Exit;
-
-          Result := lagNone;
-          Exit;
-        end;
-    end;
+    inherited;
+    Exit;
   end;
+
+  TScintillaText(ADest).FCodePage := FCodePage;
+  TScintillaText(ADest).FReadOnly := FReadOnly;
+  TScintillaText(ADest).FUseTab := FUseTab;
+  TScintillaText(ADest).FValue := FValue;
+
+  TScintillaText(ADest).Owner.Update;
+end;
+
+procedure TScintillaText.LoadFromFile(const AFileName: String);
 var
   i: Integer;
   stm: TStream;
 begin
   i := LastDelimiter('.\/', AFileName);
   if (i > 0) and (AFileName[i] = '.') then
-    SetLanguage(calcLanguage(Copy(AFileName, i + 1, MaxInt)));
+    Owner.View.SetLanguageByExt(Copy(AFileName, i + 1, MaxInt));
 
   stm := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
   try
@@ -383,7 +254,7 @@ begin
   end;
 end;
 
-procedure TScintilla.LoadFromStream(AStream: TStream);
+procedure TScintillaText.LoadFromStream(AStream: TStream);
 var
   iLen: Integer;
   sText: String;
@@ -391,203 +262,50 @@ begin
   iLen := AStream.Size - AStream.Position;
   SetLength(sText, iLen);
   AStream.Read(sText[1], iLen);
-  SetText(sText);
+  SetValue(sText);
 end;
 
-procedure TScintilla.WMGetDlgCode(var AMessage: TWMGetDlgCode);
-begin
-  inherited;
-
-  //Scintilla只返回了DLGC_WANTALLKEYS or DLGC_HASSETSEL，导致键盘方向键无法正常处理
-  //Delphi在TApplication.IsKeyMsg中会将消息转发给TWinControl.CNKeyDown，并根据其结果判断是否将消息转发给控件处理
-  AMessage.Result := AMessage.Result or DLGC_WANTARROWS or DLGC_WANTTAB; // or DLGC_WANTCHARS;
-end;
-
-procedure TScintilla.WMPaint(var AMessage: TWMPaint);
-begin
-  AMessage.DC := 0;
-  DefaultHandler(AMessage);
-end;
-
-procedure TScintilla.SetCodePage(const AValue: Word);
+procedure TScintillaText.SetCodePage(const AValue: Word);
 begin
   FCodePage := AValue;
   if not HandleAllocated then
     Exit;
 
-  DefaultPerform(SCI_SETCODEPAGE, FCodePage);
+  Perform(SCI_SETCODEPAGE, FCodePage);
 end;
 
-procedure TScintilla.SetFoldIndicator(const AValue: Boolean);
-  procedure defineMarker(AMarker: Integer; AType: Integer; AFore, ABack, ABackSelected: TColor);
-  begin
-    DefaultPerform(SCI_MARKERDEFINE, AMarker, AType);
-    DefaultPerform(SCI_MARKERSETFORE, AMarker, AFore);
-    DefaultPerform(SCI_MARKERSETBACK, AMarker, ABack);
-    DefaultPerform(SCI_MARKERSETBACKSELECTED, AMarker, ABackSelected);
-  end;
-begin
-  FFoldIndicator := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  if FFoldIndicator then
-  begin
-    //设置折叠栏的宽度
-    DefaultPerform(SCI_SETMARGINWIDTHN, 2, 14);
-
-    //设置折叠基本参数
-    DefaultPerform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
-    DefaultPerform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
-    DefaultPerform(SCI_SETMARGINMASKN, 2, Integer(SC_MASK_FOLDERS));
-    DefaultPerform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
-    DefaultPerform(SCI_SETMARGINSENSITIVEN, 2, 1);
-
-    //设置折叠按钮的外观
-    defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
-
-    DefaultPerform(SCI_MARKERENABLEHIGHLIGHT, 0);
-  end
-  else
-    DefaultPerform(SCI_SETMARGINWIDTHN, 2, 0);
-end;
-
-procedure TScintilla.SetLanguage(const AValue: TLanguage);
-var
-  iKeyword: Integer;
-  json: TQJson;
-  sKeyword, sLexer: String;
-begin
-  FLanguage := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  if AValue = lagNone then
-    DefaultPerform(SCI_SETLEXER, SCLEX_NULL)
-  else
-  begin
-    json := GetStyle(FStyleFile);
-    if not Assigned(json) then
-      Exit;
-
-    sLexer := GetJsonPath(json, Format('languages.%s.lexer', [CLanguage[FLanguage]]));
-    if sLexer = '' then
-      Exit;
-
-    DefaultPerform(SCI_SETLEXERLANGUAGE, 0, Integer(@sLexer[1]));
-
-    for iKeyword := 0 to 8 do
-    begin
-      sKeyword := GetJsonPath(json, Format('languages.%s.keywords.%d', [CLanguage[FLanguage], iKeyword]));
-      if sKeyword <> '' then
-        DefaultPerform(SCI_SETKEYWORDS, iKeyword, Integer(@sKeyword[1]));
-    end;
-  end;
-
-  SetFoldIndicator(FFoldIndicator);
-
-  ApplyStyle;
-end;
-
-procedure TScintilla.SetReadOnly(const AValue: Boolean);
+procedure TScintillaText.SetReadOnly(const AValue: Boolean);
 begin
   FReadOnly := AValue;
   if not HandleAllocated then
     Exit;
 
-  DefaultPerform(SCI_SETREADONLY, Ord(AValue));
+  Perform(SCI_SETREADONLY, Ord(AValue));
 end;
 
-procedure TScintilla.SetShowLineNumber(const AValue: Boolean);
-var
-  iLineCount, iWidth: Integer;
-  str: String;
+procedure TScintillaText.SetUseTab(const AValue: Boolean);
 begin
-  FShowLineNumber := AValue;
+  FUseTab := AValue;
   if not HandleAllocated then
     Exit;
 
-  if AValue then
-  begin
-    iLineCount := DefaultPerform(SCI_GETLINECOUNT);
-    while iLineCount > 0 do
-    begin
-      iLineCount := iLineCount div 10;
-      str := str + '9';
-    end;
-
-    while Length(str) < 4 do
-    begin
-      str := str + '9';
-    end;
-
-    iWidth := 4 + DefaultPerform(SCI_TEXTWIDTH, STYLE_LINENUMBER, Integer(@str[1]));
-
-    DefaultPerform(SCI_SETMARGINWIDTHN, 0, iWidth);
-  end
-  else
-  begin
-    DefaultPerform(SCI_SETMARGINWIDTHN, 0, 0);
-  end;
+  Perform(SCI_SETUSETABS, Ord(FUseTab));
 end;
 
-procedure TScintilla.SetShowWhiteSpace(const AValue: Boolean);
-begin
-  FShowWhiteSpace := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  //空格的显示模式有3种，SCWS_VISIBLEAFTERINDENT的显示模式暂时不提供支持
-  if FShowWhiteSpace then
-    DefaultPerform(SCI_SETVIEWWS, SCWS_VISIBLEALWAYS)
-  else
-    DefaultPerform(SCI_SETVIEWWS, SCWS_INVISIBLE);
-end;
-
-procedure TScintilla.SetStyleFile(const AValue: String);
-begin
-  FStyleFile := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  ApplyStyle;
-end;
-
-procedure TScintilla.SetTabSize(const AValue: Integer);
-begin
-  if AValue <= 0 then
-    Exit;
-
-  FTabSize := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  //从SciTE的代码来看，SCI_SETTABWIDTH管理Tab的外观特征，
-  //而SCI_SETINDENT与Tab、Backspace按键每次增加、减少的空格数有关
-  DefaultPerform(SCI_SETTABWIDTH, FTabSize);
-  DefaultPerform(SCI_SETINDENT, FTabSize);
-end;
-
-function TScintilla.GetText: String;
+function TScintillaText.GetValue: String;
 var
   iLen: Integer;
 begin
   if not HandleAllocated then
   begin
-    Result := FText;
+    Result := FValue;
     Exit;
   end;
 
-  iLen := DefaultPerform(SCI_GETTEXTLENGTH);
+  iLen := Perform(SCI_GETTEXTLENGTH);
   //由于Scintilla会在最后补字符串空结尾符，因此，需多分配一个字符，获取完内容后，再截掉
   SetLength(Result, iLen + 1);
-  DefaultPerform(SCI_GETTEXT, iLen + 1, Integer(@Result[1]));
+  Perform(SCI_GETTEXT, iLen + 1, Integer(@Result[1]));
   SetLength(Result, iLen);
 end;
 
@@ -604,7 +322,7 @@ end;
 type
   TTranslate = function (AValue: Word): Word;
 
-procedure TScintilla.SetText(const AValue: String);
+procedure TScintillaText.SetValue(const AValue: String);
   function unicodeToUtf8(ATranslate: TTranslate): String;
   var
     iLen: Integer;
@@ -660,73 +378,557 @@ procedure TScintilla.SetText(const AValue: String);
 
     SetLength(Result, iLen);
   end;
+var
+  ue: TUchardetEntry;
 begin
   if not HandleAllocated then
   begin
-    FText := AValue;
+    FValue := AValue;
     Exit;
   end;
 
   if AValue = '' then
   begin
-    FText := '';
+    FValue := '';
     SetCodePage(0);
   end
   else if (Length(AValue) >= 2) and (AValue[1] = #$FE) and (AValue[2] = #$FF) then //大端
   begin
-    FText := unicodeToUtf8(BigToLittleEndian);
+    FValue := unicodeToUtf8(BigToLittleEndian);
     SetCodePage(65001);
   end
   else if (Length(AValue) >= 2) and (AValue[1] = #$FF) and (AValue[2] = #$FE) then //小端
   begin
-    FText := unicodeToUtf8(NoTranslate);
+    FValue := unicodeToUtf8(NoTranslate);
     SetCodePage(65001);
   end
   else if (Length(AValue) >= 3) and (AValue[1] = #$EF) and (AValue[2] = #$BB) and (AValue[3] = #$BF) then //UTF-8
   begin
-    FText := RightStr(AValue, Length(AValue) - 3);
+    FValue := RightStr(AValue, Length(AValue) - 3);
     SetCodePage(65001);
   end
   else
   begin
-    FText := AValue;
-    if Assigned(FUchardetEntry) then
-      SetCodePage(FUchardetEntry(@FText[1], Length(FText)));
+    FValue := AValue;
+    ue := TScintilla.FUchardetEntry;
+    if Assigned(ue) then
+      SetCodePage(ue(@FValue[1], Length(FValue)));
   end;
 
-  DefaultPerform(SCI_BEGINUNDOACTION);
   try
     if FReadOnly then
-      DefaultPerform(SCI_SETREADONLY, 0);
+      Perform(SCI_SETREADONLY, 0);
 
-    DefaultPerform(SCI_CLEARALL);
+    Perform(SCI_CLEARALL);
 
-    DefaultPerform(SCI_ALLOCATE, Length(FText) + 1000);
-    DefaultPerform(SCI_ADDTEXT, Length(FText), Integer(@FText[1]));
+    Perform(SCI_ALLOCATE, Length(FValue) + 1000);
+    Perform(SCI_ADDTEXT, Length(FValue), Integer(@FValue[1]));
   finally
     if FReadOnly then
-      DefaultPerform(SCI_SETREADONLY, 1);
-    
-    DefaultPerform(SCI_ENDUNDOACTION);
+      Perform(SCI_SETREADONLY, 1);
+
+    Perform(SCI_EMPTYUNDOBUFFER);
   end;
 end;
 
-procedure TScintilla.SetUseTab(const AValue: Boolean);
+{ TScintillaView }
+
+constructor TScintillaView.Create(AOwner: TScintilla);
 begin
-  FUseTab := AValue;
+  inherited;
+
+  FStyleFile := CDefaultStyle;
+  FTabSize := 8;
+end;
+
+procedure TScintillaView.Backup;
+begin
+
+end;
+
+procedure TScintillaView.Update;
+begin
+  SetLanguage(FLanguage);
+  //SetFoldIndicator(FFoldIndicator); //移到SetLanguage中调用
+  SetShowLineNumber(FShowLineNumber);
+  SetShowWhiteSpace(FShowWhiteSpace);
+  SetTabSize(FTabSize);
+  SetWrap(FWrap);
+end;
+
+procedure TScintillaView.AssignTo(ADest: TPersistent);
+begin
+  if not Assigned(ADest) or not (ADest is TScintillaView) then
+  begin
+    inherited;
+    Exit;
+  end;
+
+  TScintillaView(ADest).FFoldIndicator := FFoldIndicator;
+  TScintillaView(ADest).FLanguage := FLanguage;
+  TScintillaView(ADest).FShowLineNumber := FShowLineNumber;
+  TScintillaView(ADest).FShowWhiteSpace := FShowWhiteSpace;
+  TScintillaView(ADest).FStyleFile := FStyleFile;
+  TScintillaView(ADest).FTabSize := FTabSize;
+  TScintillaView(ADest).FWrap := FWrap;
+
+  TScintillaView(ADest).Owner.Update;
+end;
+
+function GetJsonPath(AJson: TQJson; APath: String): String;
+var
+  sTemp: String;
+  iBegin, iEnd: Integer;
+begin
+  Result := '';
+
+  iBegin := 1;
+  sTemp := AJson.ValueByPath(APath, '');
+  while True do
+  begin
+    iEnd := PosEx('$(', sTemp, iBegin);
+    if iEnd = 0 then
+    begin
+      if iBegin = 1 then
+        Result := sTemp
+      else
+        Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 1);
+
+      Exit;
+    end;
+    Result := Result + MidStr(sTemp, iBegin, iEnd - iBegin);
+
+    iBegin := iEnd + 2;
+    iEnd := PosEx(')', sTemp, iBegin);
+    if iEnd = 0 then
+    begin
+      Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 3);
+      Exit;
+    end;
+
+    Result := Result + GetJsonPath(AJson, MidStr(sTemp, iBegin, iEnd - iBegin));
+    iBegin := iEnd + 1;
+  end;
+end;
+
+procedure TScintillaView.ApplyStyle;
+  function toColor(AValue: String): Integer;
+  begin
+    if AValue[1] = '#' then
+      AValue[1] := '$';
+    Result := StringToColor(AValue);
+  end;
+  procedure setStyle(AStyle: Integer; AName, AValue: String); overload;
+  begin
+    if 0 = CompareText(AName, 'italics') then
+      Perform(SCI_STYLESETITALIC, AStyle, StrToIntDef(AValue, 1))
+    else if 0 = CompareText(AName, 'bold') then
+    begin
+      if (AValue = '0') then
+        Perform(SCI_STYLESETWEIGHT, AStyle, SC_WEIGHT_NORMAL)
+      else
+        Perform(SCI_STYLESETWEIGHT, AStyle, SC_WEIGHT_BOLD);
+    end
+    else if 0 = CompareText(AName, 'weight') then
+      Perform(SCI_STYLESETWEIGHT, AStyle, StrToIntDef(AValue, 0))
+    else if 0 = CompareText(AName, 'font') then
+      Perform(SCI_STYLESETFONT, AStyle, Integer(@AValue[1]))
+    else if 0 = CompareText(AName, 'fore') then
+      Perform(SCI_STYLESETFORE, AStyle, toColor(AValue))
+    else if 0 = CompareText(AName, 'back') then
+      Perform(SCI_STYLESETBACK, AStyle, toColor(AValue))
+    else if 0 = CompareText(AName, 'size') then
+      Perform(SCI_STYLESETSIZEFRACTIONAL, AStyle, Trunc(StrToFloatDef(AValue, 0) * SC_FONT_SIZE_MULTIPLIER))
+    else if 0 = CompareText(AName, 'eolfilled') then
+      Perform(SCI_STYLESETEOLFILLED, AStyle, StrToIntDef(AValue, 1))
+    else if 0 = CompareText(AName, 'underlined') then
+      Perform(SCI_STYLESETUNDERLINE, AStyle, StrToIntDef(AValue, 1))
+    else if 0 = CompareText(AName, 'case') then
+    begin
+      if AValue = 'u' then
+        Perform(SCI_STYLESETCASE, AStyle, SC_CASE_UPPER)
+      else if AValue = 'l' then
+        Perform(SCI_STYLESETCASE, AStyle, SC_CASE_LOWER)
+      else
+        Perform(SCI_STYLESETCASE, AStyle, SC_CASE_MIXED);
+    end
+    else if 0 = CompareText(AName, 'visible') then
+      Perform(SCI_STYLESETVISIBLE, AStyle, StrToIntDef(AValue, 1))
+    else if 0 = CompareText(AName, 'changeable') then
+      Perform(SCI_STYLESETCHANGEABLE, AStyle, StrToIntDef(AValue, 1))
+    else if (AName <> '') or (AValue <> '') then
+      raise Exception.Create(Format('无法识别的样式(%d, %s, %s)', [AStyle, AName, AValue]));
+  end;
+  procedure setStyle(AStyle: Integer; ALanguage: TLanguage; AJson: TQJson); overload;
+  var
+    i: Integer;
+    sLexer: String;
+  begin
+    if ALanguage = lagNone then
+      sLexer := '*'
+    else
+      sLexer := GetJsonPath(AJson, Format('languages.%s.lexer', [CLanguage[ALanguage]]));
+
+    with TScintillaStringList.Create do
+      try
+        StrictDelimiter := True;
+        NameValueSeparator := ':';
+        Delimiter := ',';
+        DelimitedText := GetJsonPath(AJson, Format('lexers.%s.style.%d', [sLexer, AStyle]));
+        for i := 0 to Count - 1 do
+          setStyle(AStyle, Names[i], ValueFromIndex[i]);
+        if Count > 0 then
+          Perform(SCI_STYLESETCHARACTERSET, AStyle, SC_CHARSET_DEFAULT);
+      finally
+        Free;
+      end;
+  end;
+var
+  json: TQJson;
+  iStyle, iMaxStyle: Integer;
+begin
+  json := TScintilla.GetStyle(FStyleFile);
+  if not Assigned(json) then
+    Exit;
+
+  //SCI_STYLERESETDEFAULT是将默认样式改为初始值(即修改的STYLE_DEFAULT的值，只不过各要素的值在代码中写死了，来源为)
+  //SCI_STYLECLEARALL是将STYLE_DEFAULT的值，覆盖到其他样式中
+  //所以，这里的逻辑要先设置STYLE_DEFAULT的样式，然后，调用SCI_STYLECLEARALL将其他样式初始化为默认值，再有针对的设置特定样式的值
+  setStyle(STYLE_DEFAULT, lagNone, json);
+  //DefaultPerform(SCI_STYLERESETDEFAULT);
+  Perform(SCI_STYLECLEARALL);
+
+  for iStyle := 0 to STYLE_DEFAULT - 1 do
+    setStyle(iStyle, lagNone, json);
+
+  iMaxStyle := (1 shl Perform(SCI_GETSTYLEBITS)) - 1;
+  for iStyle := STYLE_DEFAULT + 1 to iMaxStyle do
+    setStyle(iStyle, lagNone, json);
+
+  if FLanguage <> lagNone then
+  begin
+    setStyle(STYLE_DEFAULT, FLanguage, json);
+    Perform(SCI_STYLECLEARALL);
+
+    for iStyle := 0 to STYLE_DEFAULT - 1 do
+      setStyle(iStyle, FLanguage, json);
+
+    for iStyle := STYLE_DEFAULT + 1 to iMaxStyle do
+      setStyle(iStyle, FLanguage, json);
+  end;
+
+  Owner.Invalidate;
+end;
+
+procedure TScintillaView.SetLanguageByExt(AExt: String);
+  function calcLanguage(AExt: String): TLanguage;
+  var
+    iLanguage, iExt: Integer;
+    json, jsonLanguage, jsonExt: TQJson;
+  begin
+    Result := lagNone;
+
+    json := TScintilla.GetStyle(FStyleFile);
+    if not Assigned(json) then
+      Exit;
+
+    json := json.ItemByName('languages');
+    for iLanguage := 0 to json.Count - 1 do
+    begin
+      jsonLanguage := json[iLanguage];
+      jsonExt := jsonLanguage.ItemByName('file_extension');
+      for iExt := 0 to jsonExt.Count - 1 do
+        if CompareText(AExt, jsonExt[iExt].Value) = 0 then
+        begin
+          for Result := Low(TLanguage) to High(TLanguage) do
+            if CompareText(jsonLanguage.Name, CLanguage[Result]) = 0 then
+              Exit;
+
+          Result := lagNone;
+          Exit;
+        end;
+    end;
+  end;
+begin
+  SetLanguage(calcLanguage(AExt));
+end;
+
+procedure TScintillaView.SetFoldIndicator(const AValue: Boolean);
+  procedure defineMarker(AMarker: Integer; AType: Integer; AFore, ABack, ABackSelected: TColor);
+  begin
+    Perform(SCI_MARKERDEFINE, AMarker, AType);
+    Perform(SCI_MARKERSETFORE, AMarker, AFore);
+    Perform(SCI_MARKERSETBACK, AMarker, ABack);
+    Perform(SCI_MARKERSETBACKSELECTED, AMarker, ABackSelected);
+  end;
+begin
+  FFoldIndicator := AValue;
   if not HandleAllocated then
     Exit;
 
-  DefaultPerform(SCI_SETUSETABS, Ord(FUseTab));
+  if FFoldIndicator then
+  begin
+    //设置折叠栏的宽度
+    Perform(SCI_SETMARGINWIDTHN, 2, 14);
+
+    //设置折叠基本参数
+    Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
+    Perform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
+    Perform(SCI_SETMARGINMASKN, 2, Integer(SC_MASK_FOLDERS));
+    Perform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
+    Perform(SCI_SETMARGINSENSITIVEN, 2, 1);
+
+    //设置折叠按钮的外观
+    defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
+    defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, $FFFFFF, $808080, $FF);
+    defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, $FFFFFF, $808080, $FF);
+    defineMarker(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER, $FFFFFF, $808080, $FF);
+    defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, $FFFFFF, $808080, $FF);
+    defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
+    defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
+
+    Perform(SCI_MARKERENABLEHIGHLIGHT, 0);
+  end
+  else
+    Perform(SCI_SETMARGINWIDTHN, 2, 0);
 end;
 
-procedure TScintilla.SetWrap(const AValue: TWrapStyle);
+procedure TScintillaView.SetLanguage(const AValue: TLanguage);
+var
+  iKeyword: Integer;
+  json: TQJson;
+  sKeyword, sLexer: String;
+begin
+  FLanguage := AValue;
+  if not HandleAllocated then
+    Exit;
+
+  if AValue = lagNone then
+    Perform(SCI_SETLEXER, SCLEX_NULL)
+  else
+  begin
+    json := TScintilla.GetStyle(FStyleFile);
+    if not Assigned(json) then
+      Exit;
+
+    sLexer := GetJsonPath(json, Format('languages.%s.lexer', [CLanguage[FLanguage]]));
+    if sLexer = '' then
+      Exit;
+
+    Perform(SCI_SETLEXERLANGUAGE, 0, Integer(@sLexer[1]));
+
+    for iKeyword := 0 to 8 do
+    begin
+      sKeyword := GetJsonPath(json, Format('languages.%s.keywords.%d', [CLanguage[FLanguage], iKeyword]));
+      if sKeyword <> '' then
+        Perform(SCI_SETKEYWORDS, iKeyword, Integer(@sKeyword[1]));
+    end;
+  end;
+
+  SetFoldIndicator(FFoldIndicator);
+
+  ApplyStyle;
+end;
+
+procedure TScintillaView.SetShowLineNumber(const AValue: Boolean);
+var
+  iLineCount, iWidth: Integer;
+  str: String;
+begin
+  FShowLineNumber := AValue;
+  if not HandleAllocated then
+    Exit;
+
+  if AValue then
+  begin
+    iLineCount := Perform(SCI_GETLINECOUNT);
+    while iLineCount > 0 do
+    begin
+      iLineCount := iLineCount div 10;
+      str := str + '9';
+    end;
+
+    while Length(str) < 4 do
+    begin
+      str := str + '9';
+    end;
+
+    iWidth := 4 + Perform(SCI_TEXTWIDTH, STYLE_LINENUMBER, Integer(@str[1]));
+
+    Perform(SCI_SETMARGINWIDTHN, 0, iWidth);
+  end
+  else
+  begin
+    Perform(SCI_SETMARGINWIDTHN, 0, 0);
+  end;
+end;
+
+procedure TScintillaView.SetShowWhiteSpace(const AValue: Boolean);
+begin
+  FShowWhiteSpace := AValue;
+  if not HandleAllocated then
+    Exit;
+
+  //空格的显示模式有3种，SCWS_VISIBLEAFTERINDENT的显示模式暂时不提供支持
+  if FShowWhiteSpace then
+    Perform(SCI_SETVIEWWS, SCWS_VISIBLEALWAYS)
+  else
+    Perform(SCI_SETVIEWWS, SCWS_INVISIBLE);
+end;
+
+procedure TScintillaView.SetStyleFile(const AValue: String);
+begin
+  FStyleFile := AValue;
+  if not HandleAllocated then
+    Exit;
+
+  ApplyStyle;
+end;
+
+procedure TScintillaView.SetTabSize(const AValue: Integer);
+begin
+  if AValue <= 0 then
+    Exit;
+
+  FTabSize := AValue;
+  if not HandleAllocated then
+    Exit;
+
+  //从SciTE的代码来看，SCI_SETTABWIDTH管理Tab的外观特征，
+  //而SCI_SETINDENT与Tab、Backspace按键每次增加、减少的空格数有关
+  Perform(SCI_SETTABWIDTH, FTabSize);
+  Perform(SCI_SETINDENT, FTabSize);
+end;
+
+procedure TScintillaView.SetWrap(const AValue: TWrapStyle);
 begin
   FWrap := AValue;
   if not HandleAllocated then
     Exit;
 
-  DefaultPerform(SCI_SETWRAPMODE, Ord(AValue));
+  Perform(SCI_SETWRAPMODE, Ord(AValue));
+end;
+
+{ TScintilla }
+
+constructor TScintilla.Create(AOwner: TComponent);
+var
+  it: TItemType;
+begin
+  inherited;
+
+  InitItems(FItems);
+  for it := Low(TItemType) to High(TItemType) do
+  begin
+    if Assigned(FItems[it]) then
+      Continue;
+
+    case it of
+      itText: FItems[it] := TScintillaText.Create(Self);
+      itView: FItems[it] := TScintillaView.Create(Self);
+    else
+      raise Exception.Create('TScintilla创建失败');
+    end;
+  end;
+end;
+
+destructor TScintilla.Destroy;
+var
+  it: TItemType;
+begin
+  for it := Low(TItemType) to High(TItemType) do
+    FreeAndNil(FItems[it]);
+
+  inherited;
+end;
+
+procedure TScintilla.InitItems(var AItems: TScintillaItems);
+begin
+  //在此函数中，提供子类对FItems中存放对象的自定义创建操作
+end;
+
+procedure TScintilla.CreateParams(var AParams: TCreateParams);
+begin
+  inherited CreateParams(AParams);
+
+  if FScintillaModule <> 0 then
+  begin
+    AParams.WindowClass.hInstance := FScintillaModule;
+    CreateSubClass(AParams, 'Scintilla');
+  end;
+end;
+
+procedure TScintilla.CreateWnd;
+var
+  it: TItemType;
+begin
+  inherited;
+
+  //DefaultPerform(SCI_SETBUFFEREDDRAW, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
+
+  for it := Low(TItemType) to High(TItemType) do
+    FItems[it].Update;
+end;
+
+procedure TScintilla.DestroyWnd;
+var
+  it: TItemType;
+begin
+  for it := Low(TItemType) to High(TItemType) do
+    FItems[it].Backup;
+
+  inherited;
+end;
+
+function TScintilla.DefaultPerform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
+var
+  msg: TMessage;
+begin
+  HandleNeeded;
+
+  msg.Msg := AMessage;
+  msg.WParam := AWParam;
+  msg.LParam := ALParam;
+  msg.Result := 0;
+  if Assigned(Self) then
+    DefaultHandler(msg);
+
+  Result := msg.Result;
+end;
+
+procedure TScintilla.WMGetDlgCode(var AMessage: TWMGetDlgCode);
+begin
+  inherited;
+
+  //Scintilla只返回了DLGC_WANTALLKEYS or DLGC_HASSETSEL，导致键盘方向键无法正常处理
+  //Delphi在TApplication.IsKeyMsg中会将消息转发给TWinControl.CNKeyDown，并根据其结果判断是否将消息转发给控件处理
+  AMessage.Result := AMessage.Result or DLGC_WANTARROWS or DLGC_WANTTAB; // or DLGC_WANTCHARS;
+end;
+
+procedure TScintilla.WMPaint(var AMessage: TWMPaint);
+begin
+  AMessage.DC := 0;
+  DefaultHandler(AMessage);
+end;
+
+function TScintilla.GetText: TScintillaText;
+begin
+  Result := TScintillaText(FItems[itText]);
+end;
+
+procedure TScintilla.SetText(const AValue: TScintillaText);
+begin
+  FItems[itText].Assign(AValue);
+end;
+
+function TScintilla.GetView: TScintillaView;
+begin
+  Result := TScintillaView(FItems[itView]);
+end;
+
+procedure TScintilla.SetView(const AValue: TScintillaView);
+begin
+  FItems[itView].Assign(AValue);
 end;
 
 class procedure TScintilla.Init;
