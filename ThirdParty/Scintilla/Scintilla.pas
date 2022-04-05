@@ -59,6 +59,9 @@ type
     FUseTab: Boolean;
     FValue: String;
     procedure SetCodePage(const AValue: Word);
+    function GetCount: Integer;
+    function GetLines(AIndex: Integer): String;
+    procedure SetLines(AIndex: Integer; const AValue: String);
     procedure SetReadOnly(const AValue: Boolean);
     function GetValue: String;
     procedure SetUseTab(const AValue: Boolean);
@@ -71,8 +74,10 @@ type
     procedure Update; override;
     procedure LoadFromFile(const AFileName: String);
     procedure LoadFromStream(AStream: TStream);
+    property Lines[AIndex: Integer]: String read GetLines write SetLines;
   published
     property CodePage: Word read FCodePage write SetCodePage default 0;
+    property Count: Integer read GetCount;
     property ReadOnly: Boolean read FReadOnly write SetReadOnly default False;
     property UseTab: Boolean read FUseTab write SetUseTab default True;
     property Value: String read GetValue write SetValue;
@@ -113,6 +118,9 @@ type
     property Wrap: TWrapStyle read FWrap write SetWrap default wsNone;
   end;
 
+  TOnScintillaClick = procedure (ASender: TObject; ARow, ACol: Integer) of object;
+  TOnScintillaMouse = procedure (ASender: TObject; AButton: TMouseButton; AShift: TShiftState; ARow, ACol: Integer) of object;
+  TOnScintillaMouseMove = procedure (ASender: TObject; AShift: TShiftState; ARow, ACol: Integer) of object;
   TScintilla = class(TWinControl)
   private
     class var FScintillaModule: THandle;
@@ -124,6 +132,11 @@ type
     class function GetStyle(AStyleName: String): TQJson;
   private
     FItems: TScintillaItems;
+    FOnClick: TOnScintillaClick;
+    FOnDblClick: TOnScintillaClick;
+    FOnMouseDown: TOnScintillaMouse;
+    FOnMouseMove: TOnScintillaMouseMove;
+    FOnMouseUp: TOnScintillaMouse;
     procedure WMGetDlgCode(var AMessage: TWMGetDlgCode); message WM_GETDLGCODE;
     procedure WMPaint(var AMessage: TWMPaint); message WM_PAINT;
     function GetText: TScintillaText;
@@ -136,6 +149,12 @@ type
     procedure DestroyWnd; override;
     function DefaultPerform(AMessage: Cardinal; AWParam: Longint = 0; ALParam: Longint = 0): Longint;
     procedure InitItems(var AItems: TScintillaItems); virtual;
+    function MouseToCell(APoint: TPoint): TPoint;
+    procedure Click; override;
+    procedure DblClick; override;
+    procedure MouseDown(AButton: TMouseButton; AShift: TShiftState; AX, AY: Integer); override;
+    procedure MouseMove(AShift: TShiftState; AX, AY: Integer); override;
+    procedure MouseUp(AButton: TMouseButton; AShift: TShiftState; AX, AY: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -144,6 +163,11 @@ type
     property Anchors;
     property Text: TScintillaText read GetText write SetText;
     property View: TScintillaView read GetView write SetView;
+    property OnClick: TOnScintillaClick read FOnClick write FOnClick;
+    property OnDblClick: TOnScintillaClick read FOnDblClick write FOnDblClick;
+    property OnMouseDown: TOnScintillaMouse read FOnMouseDown write FOnMouseDown;
+    property OnMouseMove: TOnScintillaMouseMove read FOnMouseMove write FOnMouseMove;
+    property OnMouseUp: TOnScintillaMouse read FOnMouseUp write FOnMouseUp;
   end;
 
 implementation
@@ -272,6 +296,57 @@ begin
     Exit;
 
   Perform(SCI_SETCODEPAGE, FCodePage);
+end;
+
+function TScintillaText.GetCount: Integer;
+begin
+  Result := Perform(SCI_GETLINECOUNT);
+end;
+
+function TScintillaText.GetLines(AIndex: Integer): String;
+var
+  iLen: Integer;
+begin
+  Result := '';
+  if (AIndex < 0) or (AIndex >= GetCount) then
+    Exit;
+
+  iLen := Perform(SCI_LINELENGTH, AIndex);
+  SetLength(Result, iLen);
+  Perform(SCI_GETLINE, AIndex, Integer(@Result[1]));
+
+  //截取Windows换行
+  if iLen > 1 then
+  begin
+    if (Result[iLen - 1] = #$D) and (Result[iLen] = #$A) then
+    begin
+      SetLength(Result, iLen - 2);
+      Exit;
+    end;
+  end;
+
+  //截取Unix或Mac换行
+  if iLen > 0 then
+  begin
+    if (Result[iLen] = #$D) or (Result[iLen] = #$A) then //这里用的or
+    begin
+      SetLength(Result, iLen - 1);
+      Exit;
+    end;
+  end;
+end;
+
+procedure TScintillaText.SetLines(AIndex: Integer; const AValue: String);
+begin
+  if (AIndex < 0) or (AIndex >= GetCount) then
+    Exit;
+
+  //选择指定行的文本(按文档描述，SCI_SETSEL会移动光标位置，而SCI_SETCURRENTPOS、SCI_SETANCHOR不会)
+  Perform(SCI_SETTARGETSTART, Perform(SCI_POSITIONFROMLINE, AIndex));
+  Perform(SCI_SETTARGETEND, Perform(SCI_GETLINEENDPOSITION, AIndex)); //文档说SCI_GETLINEENDPOSITION不包含换行符
+
+  //替换选中的文本(相当于把AIndex指定行的内容替换为AValue)
+  Perform(SCI_REPLACETARGET, Length(AValue), Integer(@AValue[1]));
 end;
 
 procedure TScintillaText.SetReadOnly(const AValue: Boolean);
@@ -419,10 +494,7 @@ begin
     if FReadOnly then
       Perform(SCI_SETREADONLY, 0);
 
-    Perform(SCI_CLEARALL);
-
-    Perform(SCI_ALLOCATE, Length(FValue) + 1000);
-    Perform(SCI_ADDTEXT, Length(FValue), Integer(@FValue[1]));
+    Perform(SCI_SETTEXT, 0, Integer(PChar(FValue + #0)));
   finally
     if FReadOnly then
       Perform(SCI_SETREADONLY, 1);
@@ -909,6 +981,71 @@ procedure TScintilla.WMPaint(var AMessage: TWMPaint);
 begin
   AMessage.DC := 0;
   DefaultHandler(AMessage);
+end;
+
+function TScintilla.MouseToCell(APoint: TPoint): TPoint;
+var
+  iPosition: Integer;
+begin
+  iPosition := DefaultPerform(SCI_POSITIONFROMPOINT, APoint.X, APoint.Y);
+
+  Result.X := DefaultPerform(SCI_LINEFROMPOSITION, iPosition);
+  Result.Y := DefaultPerform(SCI_GETCOLUMN, iPosition);
+end;
+
+procedure TScintilla.Click;
+var
+  pt: TPoint;
+begin
+  if Assigned(FOnClick) then
+  begin
+    pt := MouseToCell(Mouse.CursorPos);
+    FOnClick(Self, pt.X, pt.Y);
+  end;
+end;
+
+procedure TScintilla.DblClick;
+var
+  pt: TPoint;
+begin
+  if Assigned(FOnDblClick) then
+  begin
+    pt := MouseToCell(Mouse.CursorPos);
+    FOnDblClick(Self, pt.X, pt.Y);
+  end;
+end;
+
+procedure TScintilla.MouseDown(AButton: TMouseButton; AShift: TShiftState; AX, AY: Integer);
+var
+  pt: TPoint;
+begin
+  if Assigned(FOnMouseDown) then
+  begin
+    pt := MouseToCell(Point(AX, AY));
+    FOnMouseDown(Self, AButton, AShift, pt.X, pt.Y);
+  end;
+end;
+
+procedure TScintilla.MouseMove(AShift: TShiftState; AX, AY: Integer);
+var
+  pt: TPoint;
+begin
+  if Assigned(FOnMouseMove) then
+  begin
+    pt := MouseToCell(Point(AX, AY));
+    FOnMouseMove(Self, AShift, pt.X, pt.Y);
+  end;
+end;
+
+procedure TScintilla.MouseUp(AButton: TMouseButton; AShift: TShiftState; AX, AY: Integer);
+var
+  pt: TPoint;
+begin
+  if Assigned(FOnMouseUp) then
+  begin
+    pt := MouseToCell(Point(AX, AY));
+    FOnMouseUp(Self, AButton, AShift, pt.X, pt.Y);
+  end;
 end;
 
 function TScintilla.GetText: TScintillaText;
