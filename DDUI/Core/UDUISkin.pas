@@ -8,6 +8,7 @@
   如果将本库用于商业项目，由于本库中的Bug，而引起的任何风险及损失，本作者不承担任何责任。
 
   开源地址: https://github.com/ets-ddui/ets-ddui
+            https://gitee.com/ets-ddui/ets-ddui
   开源协议: The MIT License (MIT)
   作者邮箱: xinghun87@163.com
   官方博客：https://blog.csdn.net/xinghun61
