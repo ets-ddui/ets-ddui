@@ -19,7 +19,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, StrUtils, Controls, Messages, Graphics, qjson,
-  ScintillaConst, ScintillaLexerConst;
+  ScintillaConst, ScintillaLexerConst, UDictionary;
 
 const
   CStylePrefix = 'embed:';
@@ -46,12 +46,38 @@ type
     property Owner: TScintilla read FOwner;
   public
     constructor Create(AOwner: TScintilla); reintroduce; virtual;
+    procedure Assign(ASource: TPersistent); override;
     procedure Backup; virtual; abstract; //窗口销毁前，将窗口句柄中的值回写到成员变量中
     procedure Update; virtual; abstract; //窗口创建后，将成员变量中的值设到窗口句柄中
   end;
 
-  TItemType = (itText, itView);
+  TItemType = (itText, itView, itMarker);
   TScintillaItems = array[TItemType] of TScintillaItemBase;
+
+  TScintillaMargin = (smLineNumber, smSymbol, smFold{, smText, smOther});
+  TScintillaMargins = set of TScintillaMargin;
+  TScintillaSymbol = (ssBreakPoint, ssCurrentLine);
+  TScintillaSymbols = set of TScintillaSymbol;
+  TScintillaMarker = class(TScintillaItemBase)
+  private
+    FMargins: TScintillaMargins;
+    FSymbol: TDictionary;
+    function DoCreate: TPersistent;
+    function GetMargins: TScintillaMargins;
+    procedure SetMargins(const AValue: TScintillaMargins);
+    function GetSymbol(ALine: Integer): TScintillaSymbols;
+    procedure SetSymbol(ALine: Integer; const AValue: TScintillaSymbols);
+  protected
+    procedure AssignTo(ADest: TPersistent); override;
+  public
+    constructor Create(AOwner: TScintilla); override;
+    destructor Destroy; override;
+    procedure Backup; override;
+    procedure Update; override;
+    property Symbol[ALine: Integer]: TScintillaSymbols read GetSymbol write SetSymbol; default;
+  published
+    property Margins: TScintillaMargins read GetMargins write SetMargins default [smSymbol];
+  end;
 
   TScintillaText = class(TScintillaItemBase)
   private
@@ -86,18 +112,14 @@ type
 
   TScintillaView = class(TScintillaItemBase)
   private
-    FFoldIndicator: Boolean;
     FLanguage: TLanguage;
-    FShowLineNumber: Boolean;
     FShowWhiteSpace: Boolean;
     FStyleFile: String;
     FTabSize: Integer;
     FWrap: TWrapStyle;
     procedure ApplyStyle;
     procedure SetLanguageByExt(AExt: String);
-    procedure SetFoldIndicator(const AValue: Boolean);
     procedure SetLanguage(const AValue: TLanguage);
-    procedure SetShowLineNumber(const AValue: Boolean);
     procedure SetShowWhiteSpace(const AValue: Boolean);
     procedure SetStyleFile(const AValue: String);
     procedure SetTabSize(const AValue: Integer);
@@ -109,9 +131,7 @@ type
     procedure Backup; override;
     procedure Update; override;
   published
-    property FoldIndicator: Boolean read FFoldIndicator write SetFoldIndicator default False;
     property Language: TLanguage read FLanguage write SetLanguage default lagNone;
-    property ShowLineNumber: Boolean read FShowLineNumber write SetShowLineNumber default False;
     property ShowWhiteSpace: Boolean read FShowWhiteSpace write SetShowWhiteSpace default False;
     property StyleFile: String read FStyleFile write SetStyleFile;
     property TabSize: Integer read FTabSize write SetTabSize default 8;
@@ -140,6 +160,8 @@ type
     FOnMouseUp: TOnScintillaMouse;
     procedure WMGetDlgCode(var AMessage: TWMGetDlgCode); message WM_GETDLGCODE;
     procedure WMPaint(var AMessage: TWMPaint); message WM_PAINT;
+    function GetMarker: TScintillaMarker;
+    procedure SetMarker(const AValue: TScintillaMarker);
     function GetText: TScintillaText;
     procedure SetText(const AValue: TScintillaText);
     function GetView: TScintillaView;
@@ -162,6 +184,7 @@ type
   published
     property Align;
     property Anchors;
+    property Marker: TScintillaMarker read GetMarker write SetMarker;
     property Text: TScintillaText read GetText write SetText;
     property View: TScintillaView read GetView write SetView;
     property OnClick: TOnScintillaClick read FOnClick write FOnClick;
@@ -212,6 +235,22 @@ begin
   FOwner := AOwner;
 end;
 
+procedure TScintillaItemBase.Assign(ASource: TPersistent);
+begin
+  if Assigned(ASource) and (ASource is TScintillaItemBase) then
+  begin
+    if TScintillaItemBase(ASource).HandleAllocated then
+      TScintillaItemBase(ASource).Backup;
+
+    inherited;
+
+    if HandleAllocated then
+      Update;
+  end
+  else
+    inherited;
+end;
+
 function TScintillaItemBase.HandleAllocated: Boolean;
 begin
   Result := FOwner.HandleAllocated;
@@ -222,6 +261,287 @@ begin
   Result := FOwner.DefaultPerform(AMessage, AWParam, ALParam);
 end;
 
+{ TScintillaMarker }
+
+const
+  //Marker编号定义(可用值区间[0, 24]，[25, 31]已被Scintilla的代码折叠使用)
+  CBreakPoint: Integer = 0; //断点
+  CCurrentLine: Integer = 1; //调试模式下，程序的当前执行位置
+
+type
+  TSymbol = class(TPersistent)
+  strict private
+    FValue: TScintillaSymbols;
+  private
+    function GetMarker: Integer;
+  protected
+    procedure AssignTo(ADest: TPersistent); override;
+  public
+    constructor Create(AValue: Integer); reintroduce; overload;
+    constructor Create(AValue: TScintillaSymbols); reintroduce; overload;
+    property Value: TScintillaSymbols read FValue write FValue;
+    property Marker: Integer read GetMarker;
+  published
+  public
+    class function SetToInt(AValue: TScintillaSymbols): Integer;
+    class function IntToSet(AValue: Integer): TScintillaSymbols;
+    class function Key(AKey: Integer): String;
+  end;
+
+class function TSymbol.SetToInt(AValue: TScintillaSymbols): Integer;
+var
+  ss: TScintillaSymbol;
+begin
+  Result := 0;
+  for ss := Low(TScintillaSymbol) to High(TScintillaSymbol) do
+    if ss in AValue then
+      Result := Result or (1 shl Ord(ss));
+end;
+
+class function TSymbol.IntToSet(AValue: Integer): TScintillaSymbols;
+var
+  ss: TScintillaSymbol;
+begin
+  Result := [];
+  for ss := Low(TScintillaSymbol) to High(TScintillaSymbol) do
+    if (AValue and (1 shl Ord(ss))) <> 0 then
+      Include(Result, ss);
+end;
+
+class function TSymbol.Key(AKey: Integer): String;
+begin
+  Result := Format('%10d', [AKey]);
+end;
+
+constructor TSymbol.Create(AValue: Integer);
+begin
+  FValue := IntToSet(AValue);
+end;
+
+constructor TSymbol.Create(AValue: TScintillaSymbols);
+begin
+  FValue := AValue;
+end;
+
+procedure TSymbol.AssignTo(ADest: TPersistent);
+begin
+  if not Assigned(ADest) or not (ADest is TSymbol) then
+  begin
+    inherited;
+    Exit;
+  end;
+
+  TSymbol(ADest).FValue := FValue;
+end;
+
+function TSymbol.GetMarker: Integer;
+begin
+  Result := SetToInt(FValue);
+end;
+
+constructor TScintillaMarker.Create(AOwner: TScintilla);
+begin
+  inherited;
+
+  FMargins := [smSymbol];
+  FSymbol := TDictionary.Create(DoCreate);
+end;
+
+destructor TScintillaMarker.Destroy;
+begin
+  FreeAndNil(FSymbol);
+
+  inherited;
+end;
+
+procedure TScintillaMarker.AssignTo(ADest: TPersistent);
+begin
+  if not Assigned(ADest) or not (ADest is TScintillaMarker) then
+  begin
+    inherited;
+    Exit;
+  end;
+
+  TScintillaMarker(ADest).FMargins := FMargins;
+  TScintillaMarker(ADest).FSymbol.Assign(FSymbol);
+end;
+
+procedure TScintillaMarker.Backup;
+var
+  iMask, iLine: Integer;
+  ss: TScintillaSymbol;
+begin
+  iMask := 0;
+  for ss := Low(TScintillaSymbol) to High(TScintillaSymbol) do
+    iMask := iMask or (1 shl Ord(ss));
+
+  FSymbol.Clear;
+  iLine := 0;
+  while True do
+  begin
+    iLine := Perform(SCI_MARKERNEXT, iLine, iMask);
+    if iLine < 0 then
+      Exit;
+
+    FSymbol.AddObject(TSymbol.Key(iLine), TSymbol.Create(Perform(SCI_MARKERGET, iLine)));
+    Inc(iLine);
+  end;
+end;
+
+procedure TScintillaMarker.Update;
+  procedure defineMarker(AMarker: Integer; AType: Integer; AFore, ABack, ABackSelected: TColor);
+  begin
+    Perform(SCI_MARKERDEFINE, AMarker, AType);
+    Perform(SCI_MARKERSETFORE, AMarker, AFore);
+    Perform(SCI_MARKERSETBACK, AMarker, ABack);
+    Perform(SCI_MARKERSETBACKSELECTED, AMarker, ABackSelected);
+  end;
+var
+  i: Integer;
+begin
+  //定义Symbol编号
+  defineMarker(CBreakPoint, SC_MARK_CIRCLE, $FFFFFF, $0000FF, $FF);
+  defineMarker(CCurrentLine, SC_MARK_SHORTARROW, $FFFFFF, $008000, $FF);
+
+  //定义折叠按钮
+  defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
+
+  //将TScintillaMarker成员中的值，同步到窗口句柄中
+  SetMargins(FMargins);
+
+  for i := 0 to FSymbol.Count - 1 do
+    Perform(SCI_MARKERADDSET, StrToInt(FSymbol[i]), TSymbol(FSymbol.Objects[i]).Marker);
+  FSymbol.Clear; //数据同步后，后续操作以窗口句柄为准，FSymbol可清空(节省内存)
+end;
+
+function TScintillaMarker.DoCreate: TPersistent;
+begin
+  Result := TSymbol.Create([]);
+end;
+
+function TScintillaMarker.GetMargins: TScintillaMargins;
+var
+  sm: TScintillaMargin;
+  iWidth: Integer;
+begin
+  if not HandleAllocated then
+  begin
+    Result := FMargins;
+    Exit;
+  end;
+
+  Result := [];
+  for sm := Low(TScintillaMargin) to High(TScintillaMargin) do
+  begin
+    iWidth := Perform(SCI_GETMARGINWIDTHN, Ord(sm));
+    if iWidth > 0 then
+      Include(Result, sm);
+  end;
+end;
+
+procedure TScintillaMarker.SetMargins(const AValue: TScintillaMargins);
+  procedure setLineNumber;
+  var
+    iLineCount, iWidth: Integer;
+    str: String;
+  begin
+    iLineCount := Perform(SCI_GETLINECOUNT);
+    while iLineCount > 0 do
+    begin
+      iLineCount := iLineCount div 10;
+      str := str + '9';
+    end;
+
+    while Length(str) < 4 do
+    begin
+      str := str + '9';
+    end;
+
+    str := str + #0;
+
+    iWidth := 4 + Perform(SCI_TEXTWIDTH, STYLE_LINENUMBER, Integer(@str[1]));
+
+    Perform(SCI_SETMARGINWIDTHN, Ord(smLineNumber), iWidth);
+  end;
+  procedure setFold;
+  begin
+    //设置折叠栏的宽度
+    Perform(SCI_SETMARGINWIDTHN, Ord(smFold), 14);
+
+    //设置折叠基本参数
+    Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
+    Perform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
+    Perform(SCI_SETMARGINMASKN, Ord(smFold), Integer(SC_MASK_FOLDERS));
+    Perform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
+    Perform(SCI_SETMARGINSENSITIVEN, Ord(smFold), 1);
+
+    Perform(SCI_MARKERENABLEHIGHLIGHT, 0);
+  end;
+var
+  sm: TScintillaMargin;
+  smsOldMargins: TScintillaMargins;
+begin
+  FMargins := AValue;
+  if not HandleAllocated then
+    Exit;
+
+  smsOldMargins := GetMargins;
+  for sm := Low(TScintillaMargin) to High(TScintillaMargin) do
+  begin
+    if not (sm in FMargins) and (sm in smsOldMargins) then
+      Perform(SCI_SETMARGINWIDTHN, Ord(sm), 0)
+    else if (sm in FMargins) and not (sm in smsOldMargins) then
+    begin
+      case sm of
+        smLineNumber: setLineNumber;
+        smSymbol: Perform(SCI_SETMARGINWIDTHN, Ord(sm), 16);
+        smFold: setFold;
+      end;
+    end;
+  end;
+end;
+
+function TScintillaMarker.GetSymbol(ALine: Integer): TScintillaSymbols;
+var
+  i: Integer;
+begin
+  Result := [];
+  if not HandleAllocated then
+  begin
+    i := FSymbol.IndexOf(TSymbol.Key(ALine));
+    if i >= 0 then
+      Result := TSymbol(FSymbol.Objects[i]).Value;
+
+    Exit;
+  end;
+
+  Result := TSymbol.IntToSet(Perform(SCI_MARKERGET, ALine));
+end;
+
+procedure TScintillaMarker.SetSymbol(ALine: Integer; const AValue: TScintillaSymbols);
+var
+  i: Integer;
+begin
+  if not HandleAllocated then
+  begin
+    i := FSymbol.IndexOf(TSymbol.Key(ALine));
+    if i >= 0 then
+      TSymbol(FSymbol.Objects[i]).Value := AValue
+    else
+      FSymbol.AddObject(TSymbol.Key(ALine), TSymbol.Create(AValue));
+
+    Exit;
+  end;
+
+  Perform(SCI_MARKERADDSET, ALine, TSymbol.SetToInt(AValue));
+end;
+
 { TScintillaText }
 
 constructor TScintillaText.Create(AOwner: TScintilla);
@@ -229,6 +549,20 @@ begin
   inherited;
 
   FUseTab := True;
+end;
+
+procedure TScintillaText.AssignTo(ADest: TPersistent);
+begin
+  if not Assigned(ADest) or not (ADest is TScintillaText) then
+  begin
+    inherited;
+    Exit;
+  end;
+
+  TScintillaText(ADest).FCodePage := FCodePage;
+  TScintillaText(ADest).FReadOnly := FReadOnly;
+  TScintillaText(ADest).FUseTab := FUseTab;
+  TScintillaText(ADest).FValue := FValue;
 end;
 
 procedure TScintillaText.Backup;
@@ -244,22 +578,6 @@ begin
   SetReadOnly(FReadOnly); //必须在SetText之后调用(Scintilla在ReadOnly为True时，不允许设置值)
   SetUseTab(FUseTab);
   SetValue(FValue);
-end;
-
-procedure TScintillaText.AssignTo(ADest: TPersistent);
-begin
-  if not Assigned(ADest) or not (ADest is TScintillaText) then
-  begin
-    inherited;
-    Exit;
-  end;
-
-  TScintillaText(ADest).FCodePage := FCodePage;
-  TScintillaText(ADest).FReadOnly := FReadOnly;
-  TScintillaText(ADest).FUseTab := FUseTab;
-  TScintillaText(ADest).FValue := FValue;
-
-  TScintillaText(ADest).Owner.Update;
 end;
 
 procedure TScintillaText.LoadFromFile(const AFileName: String);
@@ -514,21 +832,6 @@ begin
   FTabSize := 8;
 end;
 
-procedure TScintillaView.Backup;
-begin
-
-end;
-
-procedure TScintillaView.Update;
-begin
-  SetLanguage(FLanguage);
-  //SetFoldIndicator(FFoldIndicator); //移到SetLanguage中调用
-  SetShowLineNumber(FShowLineNumber);
-  SetShowWhiteSpace(FShowWhiteSpace);
-  SetTabSize(FTabSize);
-  SetWrap(FWrap);
-end;
-
 procedure TScintillaView.AssignTo(ADest: TPersistent);
 begin
   if not Assigned(ADest) or not (ADest is TScintillaView) then
@@ -537,15 +840,23 @@ begin
     Exit;
   end;
 
-  TScintillaView(ADest).FFoldIndicator := FFoldIndicator;
   TScintillaView(ADest).FLanguage := FLanguage;
-  TScintillaView(ADest).FShowLineNumber := FShowLineNumber;
   TScintillaView(ADest).FShowWhiteSpace := FShowWhiteSpace;
   TScintillaView(ADest).FStyleFile := FStyleFile;
   TScintillaView(ADest).FTabSize := FTabSize;
   TScintillaView(ADest).FWrap := FWrap;
+end;
 
-  TScintillaView(ADest).Owner.Update;
+procedure TScintillaView.Backup;
+begin
+end;
+
+procedure TScintillaView.Update;
+begin
+  SetLanguage(FLanguage);
+  SetShowWhiteSpace(FShowWhiteSpace);
+  SetTabSize(FTabSize);
+  SetWrap(FWrap);
 end;
 
 function GetJsonPath(AJson: TQJson; APath: String): String;
@@ -726,46 +1037,6 @@ begin
   SetLanguage(calcLanguage(AExt));
 end;
 
-procedure TScintillaView.SetFoldIndicator(const AValue: Boolean);
-  procedure defineMarker(AMarker: Integer; AType: Integer; AFore, ABack, ABackSelected: TColor);
-  begin
-    Perform(SCI_MARKERDEFINE, AMarker, AType);
-    Perform(SCI_MARKERSETFORE, AMarker, AFore);
-    Perform(SCI_MARKERSETBACK, AMarker, ABack);
-    Perform(SCI_MARKERSETBACKSELECTED, AMarker, ABackSelected);
-  end;
-begin
-  FFoldIndicator := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  if FFoldIndicator then
-  begin
-    //设置折叠栏的宽度
-    Perform(SCI_SETMARGINWIDTHN, 2, 14);
-
-    //设置折叠基本参数
-    Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
-    Perform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
-    Perform(SCI_SETMARGINMASKN, 2, Integer(SC_MASK_FOLDERS));
-    Perform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
-    Perform(SCI_SETMARGINSENSITIVEN, 2, 1);
-
-    //设置折叠按钮的外观
-    defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
-    defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
-
-    Perform(SCI_MARKERENABLEHIGHLIGHT, 0);
-  end
-  else
-    Perform(SCI_SETMARGINWIDTHN, 2, 0);
-end;
-
 procedure TScintillaView.SetLanguage(const AValue: TLanguage);
 var
   iKeyword: Integer;
@@ -798,42 +1069,7 @@ begin
     end;
   end;
 
-  SetFoldIndicator(FFoldIndicator);
-
   ApplyStyle;
-end;
-
-procedure TScintillaView.SetShowLineNumber(const AValue: Boolean);
-var
-  iLineCount, iWidth: Integer;
-  str: String;
-begin
-  FShowLineNumber := AValue;
-  if not HandleAllocated then
-    Exit;
-
-  if AValue then
-  begin
-    iLineCount := Perform(SCI_GETLINECOUNT);
-    while iLineCount > 0 do
-    begin
-      iLineCount := iLineCount div 10;
-      str := str + '9';
-    end;
-
-    while Length(str) < 4 do
-    begin
-      str := str + '9';
-    end;
-
-    iWidth := 4 + Perform(SCI_TEXTWIDTH, STYLE_LINENUMBER, Integer(@str[1]));
-
-    Perform(SCI_SETMARGINWIDTHN, 0, iWidth);
-  end
-  else
-  begin
-    Perform(SCI_SETMARGINWIDTHN, 0, 0);
-  end;
 end;
 
 procedure TScintillaView.SetShowWhiteSpace(const AValue: Boolean);
@@ -899,6 +1135,7 @@ begin
     case it of
       itText: FItems[it] := TScintillaText.Create(Self);
       itView: FItems[it] := TScintillaView.Create(Self);
+      itMarker: FItems[it] := TScintillaMarker.Create(Self);
     else
       raise Exception.Create('TScintilla创建失败');
     end;
@@ -1011,7 +1248,7 @@ var
 begin
   if Assigned(FOnDblClick) then
   begin
-    pt := MouseToCell(Mouse.CursorPos);
+    pt := MouseToCell(ScreenToClient(Mouse.CursorPos));
     FOnDblClick(Self, pt.X, pt.Y);
   end;
 end;
@@ -1047,6 +1284,16 @@ begin
     pt := MouseToCell(Point(AX, AY));
     FOnMouseUp(Self, AButton, AShift, pt.X, pt.Y);
   end;
+end;
+
+function TScintilla.GetMarker: TScintillaMarker;
+begin
+  Result := TScintillaMarker(FItems[itMarker]);
+end;
+
+procedure TScintilla.SetMarker(const AValue: TScintillaMarker);
+begin
+  FItems[itMarker].Assign(AValue);
 end;
 
 function TScintilla.GetText: TScintillaText;
