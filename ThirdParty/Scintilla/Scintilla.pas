@@ -56,7 +56,8 @@ type
 
   TScintillaMargin = (smLineNumber, smSymbol, smFold{, smText, smOther});
   TScintillaMargins = set of TScintillaMargin;
-  TScintillaSymbol = (ssBreakPoint, ssCurrentLine);
+  //Marker编号定义(可用值区间[0, 24]，[25, 31]已被Scintilla的代码折叠使用)
+  TScintillaSymbol = (ssBreakPoint, ssCurrentLine, ssLowLight, ssHighLight);
   TScintillaSymbols = set of TScintillaSymbol;
   TScintillaMarker = class(TScintillaItemBase)
   private
@@ -263,11 +264,6 @@ end;
 
 { TScintillaMarker }
 
-const
-  //Marker编号定义(可用值区间[0, 24]，[25, 31]已被Scintilla的代码折叠使用)
-  CBreakPoint: Integer = 0; //断点
-  CCurrentLine: Integer = 1; //调试模式下，程序的当前执行位置
-
 type
   TSymbol = class(TPersistent)
   strict private
@@ -400,8 +396,10 @@ var
   i: Integer;
 begin
   //定义Symbol编号
-  defineMarker(CBreakPoint, SC_MARK_CIRCLE, $FFFFFF, $0000FF, $FF);
-  defineMarker(CCurrentLine, SC_MARK_SHORTARROW, $FFFFFF, $008000, $FF);
+  defineMarker(Ord(ssBreakPoint), SC_MARK_CIRCLE, $FFFFFF, $0000FF, $FF);
+  defineMarker(Ord(ssCurrentLine), SC_MARK_SHORTARROW, $FFFFFF, $008000, $FF);
+  defineMarker(Ord(ssLowLight), SC_MARK_BACKGROUND, $FFFFFF, $FFEE00, $FF);
+  defineMarker(Ord(ssHighLight), SC_MARK_BACKGROUND, $FFFFFF, $FF9000, $FF);
 
   //定义折叠按钮
   defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
@@ -411,6 +409,15 @@ begin
   defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, $FFFFFF, $808080, $FF);
   defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
   defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
+
+  //设置折叠基本参数
+  Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
+  Perform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
+  Perform(SCI_SETMARGINMASKN, Ord(smFold), Integer(SC_MASK_FOLDERS));
+  Perform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
+  Perform(SCI_SETMARGINSENSITIVEN, Ord(smFold), 1);
+
+  Perform(SCI_MARKERENABLEHIGHLIGHT, 0);
 
   //将TScintillaMarker成员中的值，同步到窗口句柄中
   SetMargins(FMargins);
@@ -446,9 +453,9 @@ begin
 end;
 
 procedure TScintillaMarker.SetMargins(const AValue: TScintillaMargins);
-  procedure setLineNumber;
+  function calcLineNumberWidth: Integer;
   var
-    iLineCount, iWidth: Integer;
+    iLineCount: Integer;
     str: String;
   begin
     iLineCount := Perform(SCI_GETLINECOUNT);
@@ -465,23 +472,7 @@ procedure TScintillaMarker.SetMargins(const AValue: TScintillaMargins);
 
     str := str + #0;
 
-    iWidth := 4 + Perform(SCI_TEXTWIDTH, STYLE_LINENUMBER, Integer(@str[1]));
-
-    Perform(SCI_SETMARGINWIDTHN, Ord(smLineNumber), iWidth);
-  end;
-  procedure setFold;
-  begin
-    //设置折叠栏的宽度
-    Perform(SCI_SETMARGINWIDTHN, Ord(smFold), 14);
-
-    //设置折叠基本参数
-    Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
-    Perform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
-    Perform(SCI_SETMARGINMASKN, Ord(smFold), Integer(SC_MASK_FOLDERS));
-    Perform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
-    Perform(SCI_SETMARGINSENSITIVEN, Ord(smFold), 1);
-
-    Perform(SCI_MARKERENABLEHIGHLIGHT, 0);
+    Result := 4 + Perform(SCI_TEXTWIDTH, STYLE_LINENUMBER, Integer(@str[1]));
   end;
 var
   sm: TScintillaMargin;
@@ -499,9 +490,9 @@ begin
     else if (sm in FMargins) and not (sm in smsOldMargins) then
     begin
       case sm of
-        smLineNumber: setLineNumber;
+        smLineNumber: Perform(SCI_SETMARGINWIDTHN, Ord(sm), calcLineNumberWidth);
         smSymbol: Perform(SCI_SETMARGINWIDTHN, Ord(sm), 16);
-        smFold: setFold;
+        smFold: Perform(SCI_SETMARGINWIDTHN, Ord(sm), 14);
       end;
     end;
   end;
