@@ -153,14 +153,13 @@ type
     class procedure UnInit;
     class function GetStyle(AStyleName: String): TQJson;
   private
+    FCore: TWinControl;
     FItems: TScintillaItems;
     FOnClick: TOnScintillaClick;
     FOnDblClick: TOnScintillaClick;
     FOnMouseDown: TOnScintillaMouse;
     FOnMouseMove: TOnScintillaMouseMove;
     FOnMouseUp: TOnScintillaMouse;
-    procedure WMGetDlgCode(var AMessage: TWMGetDlgCode); message WM_GETDLGCODE;
-    procedure WMPaint(var AMessage: TWMPaint); message WM_PAINT;
     function GetMarker: TScintillaMarker;
     procedure SetMarker(const AValue: TScintillaMarker);
     function GetText: TScintillaText;
@@ -168,9 +167,6 @@ type
     function GetView: TScintillaView;
     procedure SetView(const AValue: TScintillaView);
   protected
-    procedure CreateParams(var AParams: TCreateParams); override;
-    procedure CreateWnd; override;
-    procedure DestroyWnd; override;
     function DefaultPerform(AMessage: Cardinal; AWParam: Longint = 0; ALParam: Longint = 0): Longint;
     procedure InitItems(var AItems: TScintillaItems); virtual;
     function MouseToCell(APoint: TPoint): TPoint;
@@ -227,6 +223,103 @@ begin
   Result := inherited Add(sValue);
 end;
 
+type
+  //Scintilla的通知消息直接发送给了父窗口，Scintilla本身不会收到这些通知消息，
+  //因此，将Scintilla抽离出来，单独封装成控件TScintillaCore，
+  //TScintilla则提供对通知消息的处理
+  TScintillaCore = class(TWinControl)
+  private
+    procedure WMGetDlgCode(var AMessage: TWMGetDlgCode); message WM_GETDLGCODE;
+    procedure WMPaint(var AMessage: TWMPaint); message WM_PAINT;
+    function GetContainer: TScintilla;
+    function DefaultPerform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
+  protected
+    procedure CreateParams(var AParams: TCreateParams); override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
+    procedure WndProc(var AMessage: TMessage); override;
+  end;
+
+{ TScintillaCore }
+
+procedure TScintillaCore.CreateParams(var AParams: TCreateParams);
+begin
+  inherited CreateParams(AParams);
+
+  if TScintilla.FScintillaModule <> 0 then
+  begin
+    AParams.WindowClass.hInstance := TScintilla.FScintillaModule;
+    CreateSubClass(AParams, 'Scintilla');
+  end;
+end;
+
+procedure TScintillaCore.CreateWnd;
+var
+  it: TItemType;
+begin
+  inherited;
+
+  //DefaultPerform(SCI_SETBUFFEREDDRAW, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
+
+  for it := Low(TItemType) to High(TItemType) do
+    GetContainer.FItems[it].Update;
+end;
+
+procedure TScintillaCore.DestroyWnd;
+var
+  it: TItemType;
+begin
+  for it := Low(TItemType) to High(TItemType) do
+    GetContainer.FItems[it].Backup;
+
+  inherited;
+end;
+
+function TScintillaCore.DefaultPerform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
+var
+  msg: TMessage;
+begin
+  HandleNeeded;
+
+  msg.Msg := AMessage;
+  msg.WParam := AWParam;
+  msg.LParam := ALParam;
+  msg.Result := 0;
+  if Assigned(Self) then
+    DefaultHandler(msg);
+
+  Result := msg.Result;
+end;
+
+function TScintillaCore.GetContainer: TScintilla;
+begin
+  Result := TScintilla(Parent);
+end;
+
+procedure TScintillaCore.WMGetDlgCode(var AMessage: TWMGetDlgCode);
+begin
+  inherited;
+
+  //Scintilla只返回了DLGC_WANTALLKEYS or DLGC_HASSETSEL，导致键盘方向键无法正常处理
+  //Delphi在TApplication.IsKeyMsg中会将消息转发给TWinControl.CNKeyDown，并根据其结果判断是否将消息转发给控件处理
+  AMessage.Result := AMessage.Result or DLGC_WANTARROWS or DLGC_WANTTAB; // or DLGC_WANTCHARS;
+end;
+
+procedure TScintillaCore.WMPaint(var AMessage: TWMPaint);
+begin
+  AMessage.DC := 0;
+  DefaultHandler(AMessage);
+end;
+
+procedure TScintillaCore.WndProc(var AMessage: TMessage);
+begin
+  case AMessage.Msg of
+    WM_MOUSEFIRST..WM_MOUSELAST: GetContainer.WindowProc(AMessage);
+  end;
+
+  inherited;
+end;
+
 { TScintillaItemBase }
 
 constructor TScintillaItemBase.Create(AOwner: TScintilla);
@@ -254,7 +347,7 @@ end;
 
 function TScintillaItemBase.HandleAllocated: Boolean;
 begin
-  Result := FOwner.HandleAllocated;
+  Result := FOwner.FCore.HandleAllocated;
 end;
 
 function TScintillaItemBase.Perform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
@@ -1117,6 +1210,10 @@ var
 begin
   inherited;
 
+  FCore := TScintillaCore.Create(Self);
+  FCore.Parent := Self;
+  FCore.Align := alClient;
+
   InitItems(FItems);
   for it := Low(TItemType) to High(TItemType) do
   begin
@@ -1140,6 +1237,8 @@ begin
   for it := Low(TItemType) to High(TItemType) do
     FreeAndNil(FItems[it]);
 
+  FreeAndNil(FCore);
+
   inherited;
 end;
 
@@ -1148,68 +1247,9 @@ begin
   //在此函数中，提供子类对FItems中存放对象的自定义创建操作
 end;
 
-procedure TScintilla.CreateParams(var AParams: TCreateParams);
-begin
-  inherited CreateParams(AParams);
-
-  if FScintillaModule <> 0 then
-  begin
-    AParams.WindowClass.hInstance := FScintillaModule;
-    CreateSubClass(AParams, 'Scintilla');
-  end;
-end;
-
-procedure TScintilla.CreateWnd;
-var
-  it: TItemType;
-begin
-  inherited;
-
-  //DefaultPerform(SCI_SETBUFFEREDDRAW, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
-
-  for it := Low(TItemType) to High(TItemType) do
-    FItems[it].Update;
-end;
-
-procedure TScintilla.DestroyWnd;
-var
-  it: TItemType;
-begin
-  for it := Low(TItemType) to High(TItemType) do
-    FItems[it].Backup;
-
-  inherited;
-end;
-
 function TScintilla.DefaultPerform(AMessage: Cardinal; AWParam, ALParam: Integer): Longint;
-var
-  msg: TMessage;
 begin
-  HandleNeeded;
-
-  msg.Msg := AMessage;
-  msg.WParam := AWParam;
-  msg.LParam := ALParam;
-  msg.Result := 0;
-  if Assigned(Self) then
-    DefaultHandler(msg);
-
-  Result := msg.Result;
-end;
-
-procedure TScintilla.WMGetDlgCode(var AMessage: TWMGetDlgCode);
-begin
-  inherited;
-
-  //Scintilla只返回了DLGC_WANTALLKEYS or DLGC_HASSETSEL，导致键盘方向键无法正常处理
-  //Delphi在TApplication.IsKeyMsg中会将消息转发给TWinControl.CNKeyDown，并根据其结果判断是否将消息转发给控件处理
-  AMessage.Result := AMessage.Result or DLGC_WANTARROWS or DLGC_WANTTAB; // or DLGC_WANTCHARS;
-end;
-
-procedure TScintilla.WMPaint(var AMessage: TWMPaint);
-begin
-  AMessage.DC := 0;
-  DefaultHandler(AMessage);
+  Result := TScintillaCore(FCore).DefaultPerform(AMessage, AWParam, ALParam);
 end;
 
 function TScintilla.MouseToCell(APoint: TPoint): TPoint;
