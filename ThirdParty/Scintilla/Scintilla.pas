@@ -47,8 +47,8 @@ type
   public
     constructor Create(AOwner: TScintilla); reintroduce; virtual;
     procedure Assign(ASource: TPersistent); override;
-    procedure Backup; virtual; abstract; //窗口销毁前，将窗口句柄中的值回写到成员变量中
-    procedure Update; virtual; abstract; //窗口创建后，将成员变量中的值设到窗口句柄中
+    procedure BackupData; virtual; abstract; //窗口销毁前，将窗口句柄中的值回写到成员变量中
+    procedure UpdateData; virtual; abstract; //窗口创建后，将成员变量中的值设到窗口句柄中
   end;
 
   TItemType = (itText, itView, itMarker);
@@ -73,8 +73,8 @@ type
   public
     constructor Create(AOwner: TScintilla); override;
     destructor Destroy; override;
-    procedure Backup; override;
-    procedure Update; override;
+    procedure BackupData; override;
+    procedure UpdateData; override;
     property Symbol[ALine: Integer]: TScintillaSymbols read GetSymbol write SetSymbol; default;
   published
     property Margins: TScintillaMargins read GetMargins write SetMargins default [smSymbol];
@@ -88,24 +88,27 @@ type
     FValue: String;
     procedure SetCodePage(const AValue: Word);
     function GetCount: Integer;
-    function GetLines(AIndex: Integer): String;
-    procedure SetLines(AIndex: Integer; const AValue: String);
+    function GetLines(ALine: Integer): String;
+    procedure SetLines(ALine: Integer; const AValue: String);
     procedure SetReadOnly(const AValue: Boolean);
     function GetValue: String;
     procedure SetUseTab(const AValue: Boolean);
     procedure SetValue(const AValue: String);
+    function GetIsDirty: Boolean;
   protected
     procedure AssignTo(ADest: TPersistent); override;
   public
     constructor Create(AOwner: TScintilla); override;
-    procedure Backup; override;
-    procedure Update; override;
+    procedure BackupData; override;
+    procedure UpdateData; override;
     procedure LoadFromFile(const AFileName: String);
     procedure LoadFromStream(AStream: TStream);
-    property Lines[AIndex: Integer]: String read GetLines write SetLines;
+    procedure SavePoint;
+    property Lines[ALine: Integer]: String read GetLines write SetLines;
   published
     property CodePage: Word read FCodePage write SetCodePage default 0;
     property Count: Integer read GetCount;
+    property IsDirty: Boolean read GetIsDirty;
     property ReadOnly: Boolean read FReadOnly write SetReadOnly default False;
     property UseTab: Boolean read FUseTab write SetUseTab default True;
     property Value: String read GetValue write SetValue;
@@ -129,8 +132,8 @@ type
     procedure AssignTo(ADest: TPersistent); override;
   public
     constructor Create(AOwner: TScintilla); override;
-    procedure Backup; override;
-    procedure Update; override;
+    procedure BackupData; override;
+    procedure UpdateData; override;
   published
     property Language: TLanguage read FLanguage write SetLanguage default lagNone;
     property ShowWhiteSpace: Boolean read FShowWhiteSpace write SetShowWhiteSpace default False;
@@ -140,9 +143,18 @@ type
     property Wrap: TWrapStyle read FWrap write SetWrap default wsNone;
   end;
 
-  TOnScintillaClick = procedure (ASender: TObject; ARow, ACol: Integer) of object;
-  TOnScintillaMouse = procedure (ASender: TObject; AButton: TMouseButton; AShift: TShiftState; ARow, ACol: Integer) of object;
-  TOnScintillaMouseMove = procedure (ASender: TObject; AShift: TShiftState; ARow, ACol: Integer) of object;
+  TChangeType = (ctAdd, ctDelete);
+  //ALine从0开始计数，APos从1开始计数(和String类型的索引保持一致)
+  TOnScintillaChanging = procedure (ASender: TObject; AType: TChangeType;
+    ALine, APos, ALen: Integer; var AText: String) of object;
+  TOnScintillaChanged = procedure (ASender: TObject; AType: TChangeType;
+    ALine, APos, ALen: Integer; AText: String) of object;
+  TOnScintillaClick = procedure (ASender: TObject; ALine, APos: Integer) of object;
+  TOnScintillaMarginClick = procedure (ASender: TObject; AMargin: TScintillaMargin;
+    ALine: Integer; AShift: TShiftState) of object;
+  TOnScintillaMouse = procedure (ASender: TObject; AButton: TMouseButton; AShift: TShiftState; ALine, APos: Integer) of object;
+  TOnScintillaMouseMove = procedure (ASender: TObject; AShift: TShiftState; ALine, APos: Integer) of object;
+  TOnScintillaSavePointChanged = procedure (AModified: Boolean) of object;
   TScintilla = class(TWinControl)
   private
     class var FScintillaModule: THandle;
@@ -155,11 +167,16 @@ type
   private
     FCore: TWinControl;
     FItems: TScintillaItems;
+    FOnChanged: TOnScintillaChanged;
+    FOnChanging: TOnScintillaChanging;
     FOnClick: TOnScintillaClick;
     FOnDblClick: TOnScintillaClick;
+    FOnMarginClick: TOnScintillaMarginClick;
     FOnMouseDown: TOnScintillaMouse;
     FOnMouseMove: TOnScintillaMouseMove;
     FOnMouseUp: TOnScintillaMouse;
+    FOnSavePointChanged: TOnScintillaSavePointChanged;
+    procedure WMNotify(var AMessage: TWMNotify); message WM_NOTIFY;
     function GetMarker: TScintillaMarker;
     procedure SetMarker(const AValue: TScintillaMarker);
     function GetText: TScintillaText;
@@ -178,17 +195,23 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure BackupData;
+    procedure UpdateData;
   published
     property Align;
     property Anchors;
     property Marker: TScintillaMarker read GetMarker write SetMarker;
     property Text: TScintillaText read GetText write SetText;
     property View: TScintillaView read GetView write SetView;
+    property OnChanging: TOnScintillaChanging read FOnChanging write FOnChanging;
+    property OnChanged: TOnScintillaChanged read FOnChanged write FOnChanged;
     property OnClick: TOnScintillaClick read FOnClick write FOnClick;
     property OnDblClick: TOnScintillaClick read FOnDblClick write FOnDblClick;
+    property OnMarginClick: TOnScintillaMarginClick read FOnMarginClick write FOnMarginClick;
     property OnMouseDown: TOnScintillaMouse read FOnMouseDown write FOnMouseDown;
     property OnMouseMove: TOnScintillaMouseMove read FOnMouseMove write FOnMouseMove;
     property OnMouseUp: TOnScintillaMouse read FOnMouseUp write FOnMouseUp;
+    property OnSavePointChanged: TOnScintillaSavePointChanged read FOnSavePointChanged write FOnSavePointChanged;
   end;
 
 implementation
@@ -261,8 +284,9 @@ begin
 
   //DefaultPerform(SCI_SETBUFFEREDDRAW, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
 
+  GetContainer.UpdateData;
   for it := Low(TItemType) to High(TItemType) do
-    GetContainer.FItems[it].Update;
+    GetContainer.FItems[it].UpdateData;
 end;
 
 procedure TScintillaCore.DestroyWnd;
@@ -270,7 +294,8 @@ var
   it: TItemType;
 begin
   for it := Low(TItemType) to High(TItemType) do
-    GetContainer.FItems[it].Backup;
+    GetContainer.FItems[it].BackupData;
+  GetContainer.BackupData;
 
   inherited;
 end;
@@ -334,12 +359,12 @@ begin
   if Assigned(ASource) and (ASource is TScintillaItemBase) then
   begin
     if TScintillaItemBase(ASource).HandleAllocated then
-      TScintillaItemBase(ASource).Backup;
+      TScintillaItemBase(ASource).BackupData;
 
     inherited;
 
     if HandleAllocated then
-      Update;
+      UpdateData;
   end
   else
     inherited;
@@ -455,7 +480,7 @@ begin
   TScintillaMarker(ADest).FSymbol.Assign(FSymbol);
 end;
 
-procedure TScintillaMarker.Backup;
+procedure TScintillaMarker.BackupData;
 var
   iMask, iLine: Integer;
   ss: TScintillaSymbol;
@@ -477,7 +502,7 @@ begin
   end;
 end;
 
-procedure TScintillaMarker.Update;
+procedure TScintillaMarker.UpdateData;
   procedure defineMarker(AMarker: Integer; AType: Integer; AFore, ABack, ABackSelected: TColor);
   begin
     Perform(SCI_MARKERDEFINE, AMarker, AType);
@@ -494,7 +519,10 @@ begin
   defineMarker(Ord(ssLowLight), SC_MARK_BACKGROUND, $FFFFFF, $FFEE00, $FF);
   defineMarker(Ord(ssHighLight), SC_MARK_BACKGROUND, $FFFFFF, $FF9000, $FF);
 
-  //定义折叠按钮
+  //设置Symbol栏参数
+  Perform(SCI_SETMARGINSENSITIVEN, Ord(smSymbol), 1);
+
+  //定义Fold按钮
   defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
   defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, $FFFFFF, $808080, $FF);
   defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, $FFFFFF, $808080, $FF);
@@ -503,7 +531,7 @@ begin
   defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
   defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
 
-  //设置折叠基本参数
+  //设置Fold栏参数
   Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
   Perform(SCI_SETPROPERTY, Integer(@('fold.comment'#0)[1]), Integer(@('1'#0)[1]));
   Perform(SCI_SETMARGINMASKN, Ord(smFold), Integer(SC_MASK_FOLDERS));
@@ -649,14 +677,14 @@ begin
   TScintillaText(ADest).FValue := FValue;
 end;
 
-procedure TScintillaText.Backup;
+procedure TScintillaText.BackupData;
 begin
   //读取文本的操作均以Scintilla中记录的为准，只有当窗口未创建时，才会读取FValue的值，
   //因此，当窗口释放时，需同步最新的值到FValue中，保证在窗口重新创建时，FValue的值可以正确初始化
   FValue := GetValue;
 end;
 
-procedure TScintillaText.Update;
+procedure TScintillaText.UpdateData;
 begin
   SetCodePage(FCodePage);
   SetReadOnly(FReadOnly); //必须在SetText之后调用(Scintilla在ReadOnly为True时，不允许设置值)
@@ -690,6 +718,12 @@ begin
   SetLength(sText, iLen);
   AStream.Read(sText[1], iLen);
   SetValue(sText);
+  SavePoint;
+end;
+
+procedure TScintillaText.SavePoint;
+begin
+  Perform(SCI_SETSAVEPOINT);
 end;
 
 procedure TScintillaText.SetCodePage(const AValue: Word);
@@ -706,17 +740,22 @@ begin
   Result := Perform(SCI_GETLINECOUNT);
 end;
 
-function TScintillaText.GetLines(AIndex: Integer): String;
+function TScintillaText.GetIsDirty: Boolean;
+begin
+  Result := Perform(SCI_GETMODIFY) <> 0;
+end;
+
+function TScintillaText.GetLines(ALine: Integer): String;
 var
   iLen: Integer;
 begin
   Result := '';
-  if (AIndex < 0) or (AIndex >= GetCount) then
+  if (ALine < 0) or (ALine >= GetCount) then
     Exit;
 
-  iLen := Perform(SCI_LINELENGTH, AIndex);
+  iLen := Perform(SCI_LINELENGTH, ALine);
   SetLength(Result, iLen);
-  Perform(SCI_GETLINE, AIndex, Integer(@Result[1]));
+  Perform(SCI_GETLINE, ALine, Integer(@Result[1]));
 
   //截取Windows换行
   if iLen > 1 then
@@ -739,14 +778,14 @@ begin
   end;
 end;
 
-procedure TScintillaText.SetLines(AIndex: Integer; const AValue: String);
+procedure TScintillaText.SetLines(ALine: Integer; const AValue: String);
 begin
-  if (AIndex < 0) or (AIndex >= GetCount) then
+  if (ALine < 0) or (ALine >= GetCount) then
     Exit;
 
   //选择指定行的文本(按文档描述，SCI_SETSEL会移动光标位置，而SCI_SETCURRENTPOS、SCI_SETANCHOR不会)
-  Perform(SCI_SETTARGETSTART, Perform(SCI_POSITIONFROMLINE, AIndex));
-  Perform(SCI_SETTARGETEND, Perform(SCI_GETLINEENDPOSITION, AIndex)); //文档说SCI_GETLINEENDPOSITION不包含换行符
+  Perform(SCI_SETTARGETSTART, Perform(SCI_POSITIONFROMLINE, ALine));
+  Perform(SCI_SETTARGETEND, Perform(SCI_GETLINEENDPOSITION, ALine)); //文档说SCI_GETLINEENDPOSITION不包含换行符
 
   //替换选中的文本(相当于把AIndex指定行的内容替换为AValue)
   Perform(SCI_REPLACETARGET, Length(AValue), Integer(@AValue[1]));
@@ -931,11 +970,11 @@ begin
   TScintillaView(ADest).FWrap := FWrap;
 end;
 
-procedure TScintillaView.Backup;
+procedure TScintillaView.BackupData;
 begin
 end;
 
-procedure TScintillaView.Update;
+procedure TScintillaView.UpdateData;
 begin
   SetLanguage(FLanguage);
   SetShowWhiteSpace(FShowWhiteSpace);
@@ -1242,6 +1281,18 @@ begin
   inherited;
 end;
 
+procedure TScintilla.BackupData;
+begin
+end;
+
+procedure TScintilla.UpdateData;
+begin
+  //设置触发SCN_MODIFIED消息(TScintilla.WMNotify)的事件类型
+  DefaultPerform(SCI_SETMODEVENTMASK,
+    SC_MOD_BEFOREINSERT or SC_MOD_BEFOREDELETE
+      or SC_MOD_INSERTTEXT or SC_MOD_DELETETEXT);
+end;
+
 procedure TScintilla.InitItems(var AItems: TScintillaItems);
 begin
   //在此函数中，提供子类对FItems中存放对象的自定义创建操作
@@ -1259,7 +1310,7 @@ begin
   iPosition := DefaultPerform(SCI_POSITIONFROMPOINT, APoint.X, APoint.Y);
 
   Result.X := DefaultPerform(SCI_LINEFROMPOSITION, iPosition);
-  Result.Y := DefaultPerform(SCI_GETCOLUMN, iPosition);
+  Result.Y := iPosition - DefaultPerform(SCI_POSITIONFROMLINE, Result.X) + 1;
 end;
 
 procedure TScintilla.Click;
@@ -1314,6 +1365,117 @@ begin
   begin
     pt := MouseToCell(Point(AX, AY));
     FOnMouseUp(Self, AButton, AShift, pt.X, pt.Y);
+  end;
+end;
+
+procedure TScintilla.WMNotify(var AMessage: TWMNotify);
+type
+  PSciNotification = ^TSciNotification;
+  TSciNotification = record
+    FNotifyHeader         : TNMHdr;           // 此字段用于与TWMNotify.NMHdr保持兼容(可以理解为类继承)
+    position              : Integer;          // SCN_STYLENEEDED, SCN_MODIFIED
+    ch                    : Integer;          // SCN_CHARADDED, SCN_KEY
+    modifiers             : Integer;          // SCN_KEY
+    modificationType      : Integer;          // SCN_MODIFIED
+    text                  : PChar;            // SCN_MODIFIED
+    length                : Integer;          // SCN_MODIFIED
+    linesAdded            : Integer;          // SCN_MODIFIED
+//{$ifdef MACRO_SUPPORT}
+    message               : Integer;          // SCN_MACRORECORD
+    wParam                : Integer;          // SCN_MACRORECORD
+    lParam                : Integer;          // SCN_MACRORECORD
+//{$endif}
+    line                  : Integer;          // SCN_MODIFIED
+    foldLevelNow          : Integer;          // SCN_MODIFIED
+    foldLevelPrev         : Integer;          // SCN_MODIFIED
+    margin                : Integer;          // SCN_MARGINCLICK
+    listType              : Integer;          // SCN_USERLISTSELECTION
+    x                     : Integer;          // SCN_DWELLSTART, SCN_DWELLEND
+    y                     : Integer;          // SCN_DWELLSTART, SCN_DWELLEND
+    token                 : Integer;          // SCN_MODIFIED with SC_MOD_CONTAINER
+    annotationLinesAdded  : Integer;          // SCN_MODIFIED with SC_MOD_CHANGEANNOTATION
+    updated               : Integer;          // SCN_UPDATEUI
+  end;
+  procedure doSavePointChanged(ANotification: PSciNotification);
+  begin
+    if Assigned(FOnSavePointChanged) then
+      FOnSavePointChanged(AMessage.NMHdr.code = SCN_SAVEPOINTLEFT);
+  end;
+  procedure doModified(ANotification: PSciNotification);
+  var
+    bIsChanging: Boolean;
+    ct: TChangeType;
+    iLine, iPos: Integer;
+    strText: String;
+  begin
+    if (SC_MOD_BEFOREINSERT and ANotification.modificationType) <> 0 then
+    begin
+      bIsChanging := True;
+      ct := ctAdd;
+    end
+    else if (SC_MOD_BEFOREDELETE and ANotification.modificationType) <> 0 then
+    begin
+      bIsChanging := True;
+      ct := ctDelete;
+    end
+    else if (SC_MOD_INSERTTEXT and ANotification.modificationType) <> 0 then
+    begin
+      bIsChanging := False;
+      ct := ctAdd;
+    end
+    else if (SC_MOD_DELETETEXT and ANotification.modificationType) <> 0 then
+    begin
+      bIsChanging := False;
+      ct := ctDelete;
+    end
+    else
+    begin
+      Exit;
+    end;
+
+    if bIsChanging and not Assigned(FOnChanging) then
+      Exit
+    else if not bIsChanging and not Assigned(FOnChanged) then
+      Exit;
+
+    iLine := DefaultPerform(SCI_LINEFROMPOSITION, ANotification.position);
+    iPos := ANotification.position - DefaultPerform(SCI_POSITIONFROMLINE, iLine) + 1;
+    strText := '';
+    if (ct = ctAdd) and Assigned(ANotification.text) then
+      strText := Copy(ANotification.text, 0, ANotification.length);
+
+    if bIsChanging then
+      FOnChanging(Self, ct, iLine, iPos, ANotification.length, strText)
+    else
+      FOnChanged(Self, ct, iLine, iPos, ANotification.length, strText);
+  end;
+  procedure doMarginClick(ANotification: PSciNotification);
+  var
+    ss: TShiftState;
+  begin
+    if not Assigned(FOnMarginClick) then
+      Exit;
+
+    ss := [];
+    if (SCMOD_SHIFT and ANotification.modifiers) <> 0 then
+      Include(ss, ssShift);
+    if (SCMOD_CTRL and ANotification.modifiers) <> 0 then
+      Include(ss, ssCtrl);
+    if (SCMOD_ALT and ANotification.modifiers) <> 0 then
+      Include(ss, ssAlt);
+
+    FOnMarginClick(Self,
+      TScintillaMargin(ANotification.margin),
+      DefaultPerform(SCI_LINEFROMPOSITION, ANotification.position),
+      ss);
+  end;
+begin
+  case AMessage.NMHdr.code of
+    //Save Point只表示文本是否有被改过(多次修改，仅第一次触发消息)，常用于更新文件的修改状态
+    //另一个消息SCN_MODIFIED，在每次文本或样式发生变化时，都会触发
+    SCN_SAVEPOINTREACHED, SCN_SAVEPOINTLEFT: doSavePointChanged(PSciNotification(AMessage.NMHdr));
+    SCN_MODIFIED: doModified(PSciNotification(AMessage.NMHdr));
+    SCN_MARGINCLICK: doMarginClick(PSciNotification(AMessage.NMHdr));
   end;
 end;
 
