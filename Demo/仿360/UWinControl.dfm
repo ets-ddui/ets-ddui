@@ -16,12 +16,12 @@ object FrmWinControl: TFrmWinControl
       Width = 500
       Height = 489
       Anchors = [akLeft, akTop, akRight, akBottom]
-      View.Language = lagCpp
-      View.ShowLineNumber = True
-      View.StyleFile = 'embed:DefaultStyle'
+      Marker.Margins = [smLineNumber, smFold]
       Text.Value = 
         '#include "stdio.h"'#13#10#13#10'int main()'#13#10'{'#13#10'    printf("hello world!");' +
         #13#10'    return 0;'#13#10'}'
+      View.Language = lagCpp
+      View.StyleFile = 'embed:DefaultStyle'
     end
     object Button1: TButton
       Left = 198
