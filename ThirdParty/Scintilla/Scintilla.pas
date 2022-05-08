@@ -116,6 +116,7 @@ type
 
   TScintillaView = class(TScintillaItemBase)
   private
+    FConfig: TQJson; //FConfig是对TScintilla.FStyleFileList中的对象的引用，不对引用对象的生命周期进行管理
     FLanguage: TLanguage;
     FShowWhiteSpace: Boolean;
     FStyleFile: String;
@@ -134,6 +135,7 @@ type
     constructor Create(AOwner: TScintilla); override;
     procedure BackupData; override;
     procedure UpdateData; override;
+    function GetStyleConfig(APath: String): String;
   published
     property Language: TLanguage read FLanguage write SetLanguage default lagNone;
     property ShowWhiteSpace: Boolean read FShowWhiteSpace write SetShowWhiteSpace default False;
@@ -218,6 +220,13 @@ implementation
 
 {$R *.res}
 
+function ToColor(AValue: String): Integer;
+begin
+  if AValue[1] = '#' then
+    AValue[1] := '$';
+  Result := StringToColor(AValue);
+end;
+
 const
   CLanguage: array[TLanguage] of String = (
     '*', 'Assembler', 'Bash', 'Batch', 'CMake',
@@ -282,7 +291,7 @@ var
 begin
   inherited;
 
-  //DefaultPerform(SCI_SETBUFFEREDDRAW, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
+  //DefaultPerform(SCI_SETBUFFEREDDRAW, 0, 0); //调试Scintilla绘图逻辑时，打开此注释，以关闭双缓存机制
 
   GetContainer.UpdateData;
   for it := Low(TItemType) to High(TItemType) do
@@ -503,33 +512,61 @@ begin
 end;
 
 procedure TScintillaMarker.UpdateData;
-  procedure defineMarker(AMarker: Integer; AType: Integer; AFore, ABack, ABackSelected: TColor);
+  procedure setStyle(AMarker: Integer; AName, AValue: String); overload;
+  begin
+    if 0 = CompareText(AName, 'fore') then
+      Perform(SCI_MARKERSETFORE, AMarker, ToColor(AValue))
+    else if 0 = CompareText(AName, 'back') then
+      Perform(SCI_MARKERSETBACK, AMarker, ToColor(AValue))
+    else if 0 = CompareText(AName, 'backselected') then
+      Perform(SCI_MARKERSETBACKSELECTED, AMarker, ToColor(AValue))
+    else if (AName <> '') or (AValue <> '') then
+      raise Exception.Create(Format('无法识别的样式(%d, %s, %s)', [AMarker, AName, AValue]));
+  end;
+  procedure setStyle(AMarker: Integer; AStyle: String); overload;
+  var
+    i: Integer;
+  begin
+    if AStyle = '' then
+      Exit;
+
+    with TScintillaStringList.Create do
+      try
+        StrictDelimiter := True;
+        NameValueSeparator := ':';
+        Delimiter := ',';
+        DelimitedText := AStyle;
+        for i := 0 to Count - 1 do
+          setStyle(AMarker, Names[i], ValueFromIndex[i]);
+      finally
+        Free;
+      end;
+  end;
+  procedure defineMarker(AMarker: Integer; AType: Integer; AConfigPath: String);
   begin
     Perform(SCI_MARKERDEFINE, AMarker, AType);
-    Perform(SCI_MARKERSETFORE, AMarker, AFore);
-    Perform(SCI_MARKERSETBACK, AMarker, ABack);
-    Perform(SCI_MARKERSETBACKSELECTED, AMarker, ABackSelected);
+    setStyle(AMarker, Owner.View.GetStyleConfig(AConfigPath));
   end;
 var
   i: Integer;
 begin
   //定义Symbol编号
-  defineMarker(Ord(ssBreakPoint), SC_MARK_CIRCLE, $FFFFFF, $0000FF, $FF);
-  defineMarker(Ord(ssCurrentLine), SC_MARK_SHORTARROW, $FFFFFF, $008000, $FF);
-  defineMarker(Ord(ssLowLight), SC_MARK_BACKGROUND, $FFFFFF, $FFEE00, $FF);
-  defineMarker(Ord(ssHighLight), SC_MARK_BACKGROUND, $FFFFFF, $FF9000, $FF);
+  defineMarker(Ord(ssBreakPoint), SC_MARK_CIRCLE, 'colour.marker.breakpoint');
+  defineMarker(Ord(ssCurrentLine), SC_MARK_SHORTARROW, 'colour.marker.currentline');
+  defineMarker(Ord(ssLowLight), SC_MARK_BACKGROUND, 'colour.marker.lowlight');
+  defineMarker(Ord(ssHighLight), SC_MARK_BACKGROUND, 'colour.marker.highlight');
 
   //设置Symbol栏参数
   Perform(SCI_SETMARGINSENSITIVEN, Ord(smSymbol), 1);
 
   //定义Fold按钮
-  defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, $FFFFFF, $808080, $FF);
-  defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, $FFFFFF, $808080, $FF);
-  defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, $FFFFFF, $808080, $FF);
-  defineMarker(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER, $FFFFFF, $808080, $FF);
-  defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, $FFFFFF, $808080, $FF);
-  defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, $FFFFFF, $808080, $FF);
-  defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, $FFFFFF, $808080, $FF);
+  defineMarker(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS, 'colour.marker.folder');
+  defineMarker(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS, 'colour.marker.folder');
+  defineMarker(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE, 'colour.marker.folder');
+  defineMarker(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER, 'colour.marker.folder');
+  defineMarker(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED, 'colour.marker.folder');
+  defineMarker(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED, 'colour.marker.folder');
+  defineMarker(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER, 'colour.marker.folder');
 
   //设置Fold栏参数
   Perform(SCI_SETPROPERTY, Integer(@('fold'#0)[1]), Integer(@('1'#0)[1]));
@@ -537,6 +574,11 @@ begin
   Perform(SCI_SETMARGINMASKN, Ord(smFold), Integer(SC_MASK_FOLDERS));
   Perform(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK);
   Perform(SCI_SETMARGINSENSITIVEN, Ord(smFold), 1);
+
+  //设置Fold栏背景色
+  //Fold的背景色是通过Bitmap绘制的，Bitmap由SCI_SETFOLDMARGINCOLOUR、SCI_SETFOLDMARGINHICOLOUR两种颜色交叉绘制而成
+  Perform(SCI_SETFOLDMARGINCOLOUR, 1, ToColor(Owner.View.GetStyleConfig('colour.marker.folderbackground[0]')));
+  Perform(SCI_SETFOLDMARGINHICOLOUR, 1, ToColor(Owner.View.GetStyleConfig('colour.marker.folderbackground[1]')));
 
   Perform(SCI_MARKERENABLEHIGHLIGHT, 0);
 
@@ -952,6 +994,7 @@ begin
   inherited;
 
   FStyleFile := CDefaultStyle;
+  FConfig := nil;
   FTabSize := 8;
 end;
 
@@ -982,49 +1025,7 @@ begin
   SetWrap(FWrap);
 end;
 
-function GetJsonPath(AJson: TQJson; APath: String): String;
-var
-  sTemp: String;
-  iBegin, iEnd: Integer;
-begin
-  Result := '';
-
-  iBegin := 1;
-  sTemp := AJson.ValueByPath(APath, '');
-  while True do
-  begin
-    iEnd := PosEx('$(', sTemp, iBegin);
-    if iEnd = 0 then
-    begin
-      if iBegin = 1 then
-        Result := sTemp
-      else
-        Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 1);
-
-      Exit;
-    end;
-    Result := Result + MidStr(sTemp, iBegin, iEnd - iBegin);
-
-    iBegin := iEnd + 2;
-    iEnd := PosEx(')', sTemp, iBegin);
-    if iEnd = 0 then
-    begin
-      Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 3);
-      Exit;
-    end;
-
-    Result := Result + GetJsonPath(AJson, MidStr(sTemp, iBegin, iEnd - iBegin));
-    iBegin := iEnd + 1;
-  end;
-end;
-
 procedure TScintillaView.ApplyStyle;
-  function toColor(AValue: String): Integer;
-  begin
-    if AValue[1] = '#' then
-      AValue[1] := '$';
-    Result := StringToColor(AValue);
-  end;
   procedure setStyle(AStyle: Integer; AName, AValue: String); overload;
   begin
     if 0 = CompareText(AName, 'italics') then
@@ -1041,9 +1042,9 @@ procedure TScintillaView.ApplyStyle;
     else if 0 = CompareText(AName, 'font') then
       Perform(SCI_STYLESETFONT, AStyle, Integer(@AValue[1]))
     else if 0 = CompareText(AName, 'fore') then
-      Perform(SCI_STYLESETFORE, AStyle, toColor(AValue))
+      Perform(SCI_STYLESETFORE, AStyle, ToColor(AValue))
     else if 0 = CompareText(AName, 'back') then
-      Perform(SCI_STYLESETBACK, AStyle, toColor(AValue))
+      Perform(SCI_STYLESETBACK, AStyle, ToColor(AValue))
     else if 0 = CompareText(AName, 'size') then
       Perform(SCI_STYLESETSIZEFRACTIONAL, AStyle, Trunc(StrToFloatDef(AValue, 0) * SC_FONT_SIZE_MULTIPLIER))
     else if 0 = CompareText(AName, 'eolfilled') then
@@ -1066,65 +1067,106 @@ procedure TScintillaView.ApplyStyle;
     else if (AName <> '') or (AValue <> '') then
       raise Exception.Create(Format('无法识别的样式(%d, %s, %s)', [AStyle, AName, AValue]));
   end;
-  procedure setStyle(AStyle: Integer; ALanguage: TLanguage; AJson: TQJson); overload;
+  procedure setStyle(AStyle: Integer; ALanguage: TLanguage); overload;
   var
     i: Integer;
-    sLexer: String;
+    sLexer, sConfig: String;
   begin
     if ALanguage = lagNone then
       sLexer := '*'
     else
-      sLexer := GetJsonPath(AJson, Format('languages.%s.lexer', [CLanguage[ALanguage]]));
+      sLexer := GetStyleConfig(Format('languages.%s.lexer', [CLanguage[ALanguage]]));
+
+    sConfig := GetStyleConfig(Format('lexers.%s.style.%d', [sLexer, AStyle]));
+    if sConfig = '' then
+      Exit;
 
     with TScintillaStringList.Create do
       try
         StrictDelimiter := True;
         NameValueSeparator := ':';
         Delimiter := ',';
-        DelimitedText := GetJsonPath(AJson, Format('lexers.%s.style.%d', [sLexer, AStyle]));
+        DelimitedText := sConfig;
         for i := 0 to Count - 1 do
           setStyle(AStyle, Names[i], ValueFromIndex[i]);
-        if Count > 0 then
-          Perform(SCI_STYLESETCHARACTERSET, AStyle, SC_CHARSET_DEFAULT);
       finally
         Free;
       end;
+
+    Perform(SCI_STYLESETCHARACTERSET, AStyle, SC_CHARSET_DEFAULT);
   end;
 var
-  json: TQJson;
   iStyle, iMaxStyle: Integer;
 begin
-  json := TScintilla.GetStyle(FStyleFile);
-  if not Assigned(json) then
-    Exit;
-
-  //SCI_STYLERESETDEFAULT是将默认样式改为初始值(即修改的STYLE_DEFAULT的值，只不过各要素的值在代码中写死了，来源为)
-  //SCI_STYLECLEARALL是将STYLE_DEFAULT的值，覆盖到其他样式中
+  //SCI_STYLERESETDEFAULT是将默认样式改为初始值(即修改的STYLE_DEFAULT的值，各要素写的固定值)
+  //SCI_STYLECLEARALL是将STYLE_DEFAULT的值，覆盖到其他样式中(覆盖后，又将STYLE_LINENUMBER、STYLE_CALLTIP的颜色设置成了固定值)
   //所以，这里的逻辑要先设置STYLE_DEFAULT的样式，然后，调用SCI_STYLECLEARALL将其他样式初始化为默认值，再有针对的设置特定样式的值
-  setStyle(STYLE_DEFAULT, lagNone, json);
+  setStyle(STYLE_DEFAULT, lagNone);
+  if FLanguage <> lagNone then
+    setStyle(STYLE_DEFAULT, FLanguage);
   //DefaultPerform(SCI_STYLERESETDEFAULT);
   Perform(SCI_STYLECLEARALL);
 
   for iStyle := 0 to STYLE_DEFAULT - 1 do
-    setStyle(iStyle, lagNone, json);
+    setStyle(iStyle, lagNone);
 
   iMaxStyle := (1 shl Perform(SCI_GETSTYLEBITS)) - 1;
   for iStyle := STYLE_DEFAULT + 1 to iMaxStyle do
-    setStyle(iStyle, lagNone, json);
+    setStyle(iStyle, lagNone);
 
   if FLanguage <> lagNone then
   begin
-    setStyle(STYLE_DEFAULT, FLanguage, json);
-    Perform(SCI_STYLECLEARALL);
-
     for iStyle := 0 to STYLE_DEFAULT - 1 do
-      setStyle(iStyle, FLanguage, json);
+      setStyle(iStyle, FLanguage);
 
     for iStyle := STYLE_DEFAULT + 1 to iMaxStyle do
-      setStyle(iStyle, FLanguage, json);
+      setStyle(iStyle, FLanguage);
   end;
 
   Owner.Invalidate;
+end;
+
+function TScintillaView.GetStyleConfig(APath: String): String;
+var
+  sTemp: String;
+  iBegin, iEnd: Integer;
+begin
+  Result := '';
+
+  if not Assigned(FConfig) then
+  begin
+    FConfig := TScintilla.GetStyle(FStyleFile);
+    if not Assigned(FConfig) then
+      Exit;
+  end;
+
+  iBegin := 1;
+  sTemp := FConfig.ValueByPath(APath, '');
+  while True do
+  begin
+    iEnd := PosEx('$(', sTemp, iBegin);
+    if iEnd = 0 then
+    begin
+      if iBegin = 1 then
+        Result := sTemp
+      else
+        Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 1);
+
+      Exit;
+    end;
+    Result := Result + MidStr(sTemp, iBegin, iEnd - iBegin);
+
+    iBegin := iEnd + 2;
+    iEnd := PosEx(')', sTemp, iBegin);
+    if iEnd = 0 then
+    begin
+      Result := Result + RightStr(sTemp, Length(sTemp) - iBegin + 3);
+      Exit;
+    end;
+
+    Result := Result + GetStyleConfig(MidStr(sTemp, iBegin, iEnd - iBegin));
+    iBegin := iEnd + 1;
+  end;
 end;
 
 procedure TScintillaView.SetLanguageByExt(AExt: String);
@@ -1163,7 +1205,6 @@ end;
 procedure TScintillaView.SetLanguage(const AValue: TLanguage);
 var
   iKeyword: Integer;
-  json: TQJson;
   sKeyword, sLexer: String;
 begin
   FLanguage := AValue;
@@ -1174,11 +1215,7 @@ begin
     Perform(SCI_SETLEXER, SCLEX_NULL)
   else
   begin
-    json := TScintilla.GetStyle(FStyleFile);
-    if not Assigned(json) then
-      Exit;
-
-    sLexer := GetJsonPath(json, Format('languages.%s.lexer', [CLanguage[FLanguage]]));
+    sLexer := GetStyleConfig(Format('languages.%s.lexer', [CLanguage[FLanguage]]));
     if sLexer = '' then
       Exit;
 
@@ -1186,7 +1223,7 @@ begin
 
     for iKeyword := 0 to 8 do
     begin
-      sKeyword := GetJsonPath(json, Format('languages.%s.keywords.%d', [CLanguage[FLanguage], iKeyword]));
+      sKeyword := GetStyleConfig(Format('languages.%s.keywords.%d', [CLanguage[FLanguage], iKeyword]));
       if sKeyword <> '' then
         Perform(SCI_SETKEYWORDS, iKeyword, Integer(@sKeyword[1]));
     end;
@@ -1211,6 +1248,7 @@ end;
 procedure TScintillaView.SetStyleFile(const AValue: String);
 begin
   FStyleFile := AValue;
+  FConfig := nil;
   if not HandleAllocated then
     Exit;
 

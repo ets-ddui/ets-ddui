@@ -227,11 +227,22 @@
     "lexers": {
         "*": {
             "style": {
-                "32": "$(font.base)",
-                "33": "back:#C0C0C0,$(font.base)",
-                "34": "fore:#0000FF,bold",
-                "35": "fore:#FF0000,bold",
-                "37": "fore:#C0C0C0,back:#FFFFFF"
+                "0": "fore:#F8F8F8",
+                "21": "back:#008000",
+                "22": "back:#8000FF",
+                "23": "back:#FFFF00",
+                "24": "back:#FF8000",
+                "25": "back:#00FFFF",
+                "26": "fore:#8080C0,back:#FFFF00",
+                "27": "fore:#000000,back:#8000FF",
+                "28": "fore:#FFCAB0,back:#0080FF",
+                "29": "fore:#555753,back:#00FF00",
+                "31": "fore:#CC0000,back:#EDD400",
+                "32": "fore:#F8F8F8,back:#0C1021,$(font.base)",
+                "33": "fore:#EEEEEC,back:#2E3436,$(font.base)",
+                "34": "fore:#FCE94F,bold",
+                "35": "fore:#EF2929,bold",
+                "37": "fore:#888A85"
             }
         },
         "asm": {
@@ -316,7 +327,6 @@
         },
         "cpp": {
             "style": {
-                "0": "fore:#808080",
                 "1": "$(colour.code.comment.box),$(font.code.comment.box)",
                 "2": "$(colour.code.comment.line),$(font.code.comment.line)",
                 "3": "$(colour.code.comment.doc),$(font.code.comment.doc)",
@@ -324,50 +334,15 @@
                 "5": "$(colour.keyword),bold",
                 "6": "$(colour.string)",
                 "7": "$(colour.char)",
-                "8": "fore:#804080",
                 "9": "$(colour.preproc)",
                 "10": "$(colour.operator),bold",
-                "12": "fore:#000000,$(font.monospace),back:#E0C0E0,eolfilled",
-                "13": "fore:#007F00,$(font.monospace),back:#E0FFE0,eolfilled",
-                "14": "fore:#3F7F3F,$(font.monospace),back:#E0F0FF,eolfilled",
+                "11": "fore:#F8F8F8",
+                "13": "fore:#D8FA3C",
+                "14": "fore:#61CE3C",
                 "15": "$(colour.code.comment.doc),$(font.code.comment.doc)",
-                "16": "fore:#B00040",
-                "17": "fore:#3060A0,$(font.code.comment.doc)",
-                "18": "fore:#804020,$(font.code.comment.doc)",
-                "20": "$(colour.string),back:#FFF3FF,eolfilled",
-                "21": "$(font.monospace),fore:#007F00,back:#E0FFE0,eolfilled",
-                "22": "$(font.monospace),fore:#007F00,back:#E7FFD7,eolfilled",
-                "23": "fore:#659900",
-                "24": "$(colour.code.comment.doc)",
-                "25": "fore:#C06000",
-                "26": "fore:#BE07FF,$(font.code.comment.line)",
-                "32": "$(font.base)",
-                "64": "fore:#C0C0C0",
-                "65": "$(lexers.cpp.style.1),fore:#90B090",
-                "66": "$(lexers.cpp.style.2),fore:#90B090",
-                "67": "$(lexers.cpp.style.3),fore:#D0D0D0",
-                "68": "$(lexers.cpp.style.4),fore:#90B0B0",
-                "69": "$(lexers.cpp.style.5),fore:#9090B0",
-                "70": "$(lexers.cpp.style.6),fore:#B090B0",
-                "71": "$(lexers.cpp.style.7),fore:#B090B0",
-                "72": "$(lexers.cpp.style.8),fore:#C0C0C0",
-                "73": "$(lexers.cpp.style.9),fore:#B0B090",
-                "74": "$(lexers.cpp.style.10),fore:#B0B0B0",
-                "75": "$(lexers.cpp.style.11),fore:#B0B0B0",
-                "76": "$(lexers.cpp.style.12),fore:#000000",
-                "77": "$(lexers.cpp.style.13),fore:#90B090",
-                "78": "$(lexers.cpp.style.14),fore:#7FAF7F",
-                "79": "$(lexers.cpp.style.15),fore:#C0C0C0",
-                "80": "$(lexers.cpp.style.16),fore:#C0C0C0",
-                "81": "$(lexers.cpp.style.17),fore:#C0C0C0",
-                "82": "$(lexers.cpp.style.18),fore:#C0C0C0",
-                "84": "$(lexers.cpp.style.20),fore:#B090B0",
-                "85": "$(lexers.cpp.style.21),fore:#90B090",
-                "86": "$(lexers.cpp.style.22),fore:#90B090",
-                "87": "$(lexers.cpp.style.23),fore:#A0C090",
-                "88": "$(lexers.cpp.style.23),fore:#C0C0C0",
-                "89": "fore:#D7A090",
-                "90": "fore:#C3A1CF,$(font.code.comment.line)"
+                "16": "fore:#FBDE2D",
+                "17": "fore:#AEAEAE",
+                "18": "fore:#AEAEAE"
             }
         },
         "css": {
@@ -778,12 +753,12 @@
         }
     },
     "colour": {
-        "char": "fore:#7F007F",
+        "char": "fore:#61CE3C",
         "code": {
             "comment": {
-                "box": "fore:#007F00",
-                "doc": "fore:#3F703F",
-                "line": "fore:#007F00"
+                "box": "fore:#AEAEAE",
+                "doc": "fore:#AEAEAE",
+                "line": "fore:#AEAEAE"
             }
         },
         "embedded": {
@@ -817,24 +792,24 @@
                 "back": "back:#EFEFFF"
             }
         }
-        "keyword": "fore:#00007F",
+        "keyword": "fore:#FBDE2D",
         "marker": {
             "breakpoint": "fore:#FFFFFF,back:#0000FF,backselected:#FF0000",
             "currentline": "fore:#FFFFFF,back:#008000,backselected:#FF0000",
             "lowlight": "fore:#FFFFFF,back:#FFEE00,backselected:#FF0000",
             "highlight": "fore:#FFFFFF,back:#FF9000,backselected:#FF0000",
             "folder": "fore:#FFFFFF,back:#808080,backselected:#FF0000",
-            "folderbackground": ["#F0F0F0", "#FFFFFF"]
+            "folderbackground": ["#2E3436", "#0C1021"]
         },
         "notused": "back:#FF0000",
-        "number": "fore:#007F7F",
-        "operator": "fore:#000000",
+        "number": "fore:#D8FA3C",
+        "operator": "fore:#FBDE2D",
         "other": {
             "comment": "fore:#007F00",
             "operator": "fore:#B06000"
         },
-        "preproc": "fore:#7F7F00",
-        "string": "fore:#7F007F"
+        "preproc": "fore:#FBDE2D",
+        "string": "fore:#61CE3C"
     },
     "font": {
         "base": "font:Courier New,size:12",
